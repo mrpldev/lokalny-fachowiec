@@ -1,3 +1,54 @@
-* {
-    background-color: gray;
+body {
+    background-color: linear-gradient(to right, #bab6b6, #9f9f9f);
+    
+}
+
+.upper-nav {
+    font-size: 50px;
+    color: white;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.nav-search {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex: 1 1 260px;
+}
+
+.nav-search input {
+    box-sizing: border-box;
+    min-width: 0;
+    width: 100%;
+    padding: 12px 14px;
+    border: 1px solid #888;
+    border-radius: 12px;
+    font: 18px "PT Sans Narrow", sans-serif;
+}
+
+.nav-search button {
+    flex-shrink: 0;
+    padding: 12px 18px;
+    font-size: 18px;
+}
+
+button {
+    background: rgba(189, 209, 11, 0.996);
+    border: none;
+    color: white;
+    padding: 15px 32px;
+    border-radius: 12px;
+    text-shadow: 1px 2px 3px rgba(0, 0, 0, 0.55);
+    -webkit-text-stroke: 0.5px rgba(0, 0, 0, 0.35);
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 27px;
+    margin: 4px 2px;
+    cursor: pointer;
+    font-family: "PT Sans Narrow", sans-serif;
+    font-weight: bold;
 }

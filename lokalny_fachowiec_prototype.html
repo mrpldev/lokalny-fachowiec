@@ -1,0 +1,955 @@
+<!DOCTYPE html>
+<html lang="pl" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lokalny Fachowiec - Znajdź sprawdzonych specjalistów w swojej okolicy</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                            800: '#1e40af',
+                            900: '#1e3a8a',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Custom scrollbars */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 flex flex-col min-h-screen">
+
+    <!-- NAVIGATION BAR -->
+    <header class="sticky top-0 z-40 bg-white border-b border-slate-200 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                
+                <!-- Logo -->
+                <div class="flex items-center gap-3">
+                    <a href="#" class="flex items-center gap-2 group">
+                        <div class="w-10 h-10 rounded-xl bg-brand-600 text-white flex items-center justify-center font-bold text-xl shadow-md group-hover:bg-brand-700 transition">
+                            <i class="fa-solid fa-screwdriver-wrench"></i>
+                        </div>
+                        <span class="font-bold text-xl text-slate-900 tracking-tight">Lokalny<span class="text-brand-600">Fachowiec</span></span>
+                    </a>
+                </div>
+
+                <!-- Desktop Search in Nav -->
+                <div class="hidden md:flex items-center flex-1 max-w-md mx-8">
+                    <div class="relative w-full">
+                        <input type="text" id="nav-search-input" placeholder="Szukaj usługi (np. hydraulik, malowanie)..." 
+                               class="w-full pl-10 pr-4 py-2 bg-slate-100 border border-transparent rounded-lg text-sm focus:outline-none focus:bg-white focus:border-brand-500 transition">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400"></i>
+                    </div>
+                </div>
+
+                <!-- Navigation Links & User Actions -->
+                <div class="flex items-center gap-3">
+                    <a href="#kalkulator" class="hidden sm:flex items-center gap-2 px-3 py-2 text-sm font-medium text-brand-700 bg-brand-50 hover:bg-brand-100 rounded-lg transition">
+                        <i class="fa-solid fa-calculator"></i>
+                        Kalkulator Usług
+                    </a>
+                    
+                    <button id="auth-btn" onclick="openAuthModal()" class="px-4 py-2 text-sm font-semibold text-white bg-brand-600 hover:bg-brand-700 rounded-lg shadow-sm transition flex items-center gap-2">
+                        <i class="fa-solid fa-user"></i>
+                        <span>Zaloguj / Zarejestruj</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- HERO SECTION -->
+    <section class="bg-gradient-to-b from-brand-900 via-brand-800 to-slate-900 text-white py-12 md:py-20 relative overflow-hidden">
+        <!-- Decorative Background Glow -->
+        <div class="absolute -top-24 -right-24 w-96 h-96 bg-brand-500/20 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="absolute -bottom-24 -left-24 w-96 h-96 bg-brand-600/20 rounded-full blur-3xl pointer-events-none"></div>
+
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
+            <span class="inline-block px-3 py-1 bg-brand-500/20 text-brand-200 border border-brand-400/30 rounded-full text-xs font-semibold uppercase tracking-wider mb-4">
+                Szybko • Pewnie • Lokalnie
+            </span>
+            <h1 class="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight mb-4 max-w-3xl mx-auto leading-tight">
+                Znajdź sprawdzonego fachowca w swojej okolicy
+            </h1>
+            <p class="text-slate-300 text-base sm:text-lg max-w-2xl mx-auto mb-8">
+                Przeglądaj opinie, porównuj cenniki i sprawdzaj portfolio elektryków, hydraulików oraz ekip remontowych bez ukrytych kosztów.
+            </p>
+
+            <!-- Quick Search Bar -->
+            <div class="bg-white p-3 rounded-2xl shadow-xl max-w-3xl mx-auto text-slate-800 grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <!-- Category Select -->
+                <div class="relative">
+                    <label class="block text-xs font-semibold text-slate-500 text-left px-2 pt-1">Kategoria</label>
+                    <select id="hero-category" class="w-full bg-transparent font-medium py-1 px-2 focus:outline-none cursor-pointer">
+                        <option value="">Wszystkie kategorie</option>
+                        <option value="hydraulik">Hydraulik</option>
+                        <option value="elektryk">Elektryk</option>
+                        <option value="remonty">Ekipa Remontowa</option>
+                        <option value="złota rączka">Złota Rączka</option>
+                        <option value="stolarz">Stolarz</option>
+                    </select>
+                </div>
+
+                <!-- City Select -->
+                <div class="relative border-t sm:border-t-0 sm:border-l border-slate-200 pt-2 sm:pt-0 sm:pl-2">
+                    <label class="block text-xs font-semibold text-slate-500 text-left px-2 pt-1">Miasto / Lokalizacja</label>
+                    <select id="hero-city" class="w-full bg-transparent font-medium py-1 px-2 focus:outline-none cursor-pointer">
+                        <option value="">Cała Polska</option>
+                        <option value="Gdańsk">Gdańsk / Trójmiasto</option>
+                        <option value="Warszawa">Warszawa</option>
+                        <option value="Kraków">Kraków</option>
+                        <option value="Wrocław">Wrocław</option>
+                        <option value="Poznań">Poznań</option>
+                    </select>
+                </div>
+
+                <!-- Search Action -->
+                <button onclick="applyHeroSearch()" class="w-full bg-brand-600 hover:bg-brand-700 text-white font-semibold py-3 px-6 rounded-xl shadow transition flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <span>Szukaj ofert</span>
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- MAIN CONTENT AREA -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 flex-grow w-full">
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+            
+            <!-- FILTERS SIDEBAR -->
+            <aside class="lg:col-span-1">
+                <div class="bg-white rounded-2xl border border-slate-200 p-5 sticky top-20 shadow-sm">
+                    <div class="flex items-center justify-between mb-4 border-b border-slate-100 pb-3">
+                        <h2 class="font-bold text-slate-900 text-lg flex items-center gap-2">
+                            <i class="fa-solid fa-sliders text-brand-600"></i> Filtry wyszukiwania
+                        </h2>
+                        <button onclick="resetFilters()" class="text-xs text-brand-600 hover:text-brand-800 font-medium">Resetuj</button>
+                    </div>
+
+                    <!-- Search Text -->
+                    <div class="mb-5">
+                        <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-2">Słowo kluczowe</label>
+                        <input type="text" id="filter-keyword" oninput="renderSpecialists()" placeholder="np. płytki, gniazdko..." class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:border-brand-500">
+                    </div>
+
+                    <!-- Category -->
+                    <div class="mb-5">
+                        <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-2">Kategoria usługi</label>
+                        <select id="filter-category" onchange="renderSpecialists()" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:border-brand-500 bg-white">
+                            <option value="">Wszystkie kategoria</option>
+                            <option value="hydraulik">Hydraulik</option>
+                            <option value="elektryk">Elektryk</option>
+                            <option value="remonty">Remonty i wykończenia</option>
+                            <option value="złota rączka">Złota rączka</option>
+                            <option value="stolarz">Stolarz</option>
+                        </select>
+                    </div>
+
+                    <!-- Location -->
+                    <div class="mb-5">
+                        <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-2">Lokalizacja</label>
+                        <select id="filter-city" onchange="renderSpecialists()" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:border-brand-500 bg-white">
+                            <option value="">Dowolne miasto</option>
+                            <option value="Gdańsk">Gdańsk</option>
+                            <option value="Warszawa">Warszawa</option>
+                            <option value="Kraków">Kraków</option>
+                            <option value="Wrocław">Wrocław</option>
+                            <option value="Poznań">Poznań</option>
+                        </select>
+                    </div>
+
+                    <!-- Price Range -->
+                    <div class="mb-5">
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="text-xs font-semibold text-slate-600 uppercase tracking-wider">Maks. stawkę za h</label>
+                            <span id="price-val" class="text-sm font-bold text-brand-600">250 zł</span>
+                        </div>
+                        <input type="range" id="filter-price" min="50" max="300" step="10" value="250" oninput="updatePriceLabel(this.value); renderSpecialists();" class="w-full accent-brand-600 cursor-pointer">
+                    </div>
+
+                    <!-- Rating Filter -->
+                    <div class="mb-5">
+                        <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-2">Minimalna ocena</label>
+                        <select id="filter-rating" onchange="renderSpecialists()" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:border-brand-500 bg-white">
+                            <option value="0">Wszystkie oceny</option>
+                            <option value="4.5">★ 4.5 i więcej</option>
+                            <option value="4.8">★ 4.8 i więcej</option>
+                            <option value="5.0">★ 5.0 (Tylko najwyższe)</option>
+                        </select>
+                    </div>
+
+                    <!-- Experience / Staż -->
+                    <div class="mb-2">
+                        <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-2">Doświadczenie (staż)</label>
+                        <select id="filter-experience" onchange="renderSpecialists()" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:border-brand-500 bg-white">
+                            <option value="0">Dowolny staż</option>
+                            <option value="3">Minimum 3 lata</option>
+                            <option value="5">Minimum 5 lat</option>
+                            <option value="10">Minimum 10 lat</option>
+                        </select>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- SPECIALISTS LISTINGS -->
+            <section class="lg:col-span-3">
+                <!-- Header Stats & Sorting -->
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-4 mb-6 border-b border-slate-200 gap-3">
+                    <div>
+                        <h2 class="text-2xl font-bold text-slate-900">Dostępni Fachowcy</h2>
+                        <p class="text-slate-500 text-sm">Znaleziono: <span id="results-count" class="font-semibold text-slate-800">0</span> ofert</p>
+                    </div>
+
+                    <div class="flex items-center gap-2">
+                        <label class="text-xs text-slate-500 font-medium whitespace-nowrap">Sortuj według:</label>
+                        <select id="sort-select" onchange="renderSpecialists()" class="bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-brand-500">
+                            <option value="rating">Najwyższa ocena</option>
+                            <option value="price-asc">Cena: od najniższej</option>
+                            <option value="price-desc">Cena: od najwyższej</option>
+                            <option value="experience">Doświadczenie (staż)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Grid of Specialist Cards -->
+                <div id="specialists-container" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Cards will be populated dynamically by JS -->
+                </div>
+
+                <!-- Empty State Message -->
+                <div id="no-results" class="hidden bg-white rounded-2xl border border-slate-200 p-12 text-center">
+                    <div class="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-400 text-2xl">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-slate-800 mb-1">Brak wyników wyszukiwania</h3>
+                    <p class="text-slate-500 text-sm mb-4">Spróbuj zmienić kryteria filtrowania lub wyczyść filtry.</p>
+                    <button onclick="resetFilters()" class="px-4 py-2 bg-brand-600 text-white rounded-lg text-sm font-semibold hover:bg-brand-700 transition">
+                        Resetuj filtry
+                    </button>
+                </div>
+            </section>
+
+        </div>
+
+        <!-- SERVICE & REPAIR COST CALCULATOR SECTION -->
+        <section id="kalkulator" class="mt-16 pt-8 border-t border-slate-200">
+            <div class="bg-gradient-to-br from-slate-900 to-brand-950 text-white rounded-3xl p-6 sm:p-10 shadow-xl">
+                <div class="max-w-3xl mb-8">
+                    <span class="text-brand-400 font-semibold text-xs uppercase tracking-wider">Planuj budżet</span>
+                    <h2 class="text-2xl sm:text-3xl font-bold mt-1">Interaktywny Kalkulator Kosztów Remontu</h2>
+                    <p class="text-slate-300 text-sm sm:text-base mt-2">
+                        Zaznacz usługi, podaj ilość lub metraż i uzyskaj natychmiastową estymację całkowitych kosztów prac wykończeniowych.
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <!-- Calculator Form Items -->
+                    <div class="lg:col-span-2 space-y-4" id="calculator-items">
+                        <!-- Populated by JavaScript -->
+                    </div>
+
+                    <!-- Total Summary Box -->
+                    <div class="lg:col-span-1">
+                        <div class="bg-white/10 backdrop-blur-md border border-white/10 rounded-2xl p-6 sticky top-24">
+                            <h3 class="text-lg font-bold border-b border-white/10 pb-3 mb-4 flex items-center justify-between">
+                                <span>Podsumowanie</span>
+                                <i class="fa-solid fa-receipt text-brand-400"></i>
+                            </h3>
+
+                            <div id="calc-summary-list" class="space-y-2 text-sm text-slate-300 max-h-48 overflow-y-auto mb-4 pr-1">
+                                <p class="text-slate-400 italic">Brak wybranych usług.</p>
+                            </div>
+
+                            <div class="border-t border-white/10 pt-4 mb-6">
+                                <div class="flex justify-between items-baseline">
+                                    <span class="text-slate-300 text-sm">Szacowany koszt:</span>
+                                    <span id="calc-total" class="text-2xl sm:text-3xl font-extrabold text-brand-400">0 zł</span>
+                                </div>
+                                <p class="text-xs text-slate-400 mt-1">*Cena orientacyjna robocizny, nie obejmuje materiałów.</p>
+                            </div>
+
+                            <button onclick="requestQuoteWithCalc()" class="w-full py-3 bg-brand-500 hover:bg-brand-600 text-white font-bold rounded-xl shadow transition text-sm flex items-center justify-center gap-2">
+                                <i class="fa-solid fa-paper-plane"></i> Wyślij zapytanie do fachowców
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="bg-slate-900 text-slate-400 py-10 mt-16 border-t border-slate-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center sm:text-left">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+                <div>
+                    <span class="font-bold text-xl text-white tracking-tight">Lokalny<span class="text-brand-500">Fachowiec</span></span>
+                    <p class="text-xs text-slate-400 mt-2">
+                        Projekt platformy internetowej ułatwiającej wyszukiwanie i zamawianie lokalnych usług rzemieślniczych i wykończeniowych.
+                    </p>
+                </div>
+                <div>
+                    <h4 class="text-white text-sm font-semibold mb-3">Szybkie linki</h4>
+                    <ul class="space-y-2 text-xs">
+                        <li><a href="#" class="hover:text-white transition">Wyszukiwarka fachowców</a></li>
+                        <li><a href="#kalkulator" class="hover:text-white transition">Kalkulator prac remontowych</a></li>
+                        <li><a href="#" onclick="openAuthModal()" class="hover:text-white transition">Dołącz jako Wykonawca</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-white text-sm font-semibold mb-3">Informacje projektowe</h4>
+                    <p class="text-xs text-slate-400">
+                        Prototyp aplikacji wykonany na potrzeby praktyk zawodowych (klasa 3 technikum).
+                    </p>
+                </div>
+            </div>
+            <div class="border-t border-slate-800 pt-6 text-xs text-slate-500 text-center">
+                &copy; 2026 LokalnyFachowiec. Wszelkie prawa zastrzeżone.
+            </div>
+        </div>
+    </footer>
+
+    <!-- PROFILE / PORTFOLIO MODAL -->
+    <div id="profile-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-white rounded-3xl max-w-3xl w-full max-h-[90vh] overflow-y-auto shadow-2xl relative animate-fade-in my-8">
+            <!-- Close Button -->
+            <button onclick="closeProfileModal()" class="absolute top-4 right-4 z-10 w-9 h-9 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-full flex items-center justify-center transition">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+
+            <!-- Header / Banner -->
+            <div id="modal-header-bg" class="h-32 bg-gradient-to-r from-brand-600 to-brand-800 rounded-t-3xl relative"></div>
+            
+            <div class="px-6 sm:px-8 pb-8 -mt-12 relative">
+                <!-- Avatar & Basic info -->
+                <div class="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4 mb-6">
+                    <div class="flex items-end gap-4">
+                        <img id="modal-avatar" src="" alt="" class="w-24 h-24 rounded-2xl border-4 border-white object-cover shadow-md bg-white">
+                        <div>
+                            <h2 id="modal-name" class="text-2xl font-bold text-slate-900"></h2>
+                            <p id="modal-category" class="text-sm font-medium text-brand-600"></p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="alert('Funkcja kontaktu: Wiadomość została wysłana do fachowca!')" class="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-sm font-semibold shadow transition flex items-center gap-2">
+                            <i class="fa-solid fa-envelope"></i> Wyślij wiadomość
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Stats Bar -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-slate-50 p-4 rounded-2xl border border-slate-100 mb-6 text-center">
+                    <div>
+                        <span class="block text-xs text-slate-400">Lokalizacja</span>
+                        <span id="modal-city" class="text-sm font-bold text-slate-800"></span>
+                    </div>
+                    <div>
+                        <span class="block text-xs text-slate-400">Doświadczenie</span>
+                        <span id="modal-exp" class="text-sm font-bold text-slate-800"></span>
+                    </div>
+                    <div>
+                        <span class="block text-xs text-slate-400">Stawka</span>
+                        <span id="modal-price" class="text-sm font-bold text-brand-600"></span>
+                    </div>
+                    <div>
+                        <span class="block text-xs text-slate-400">Ocena</span>
+                        <span id="modal-rating" class="text-sm font-bold text-amber-500"></span>
+                    </div>
+                </div>
+
+                <!-- Bio / Description -->
+                <div class="mb-6">
+                    <h3 class="text-base font-bold text-slate-900 mb-2">O mnie</h3>
+                    <p id="modal-bio" class="text-slate-600 text-sm leading-relaxed"></p>
+                </div>
+
+                <!-- Portfolio Gallery -->
+                <div class="mb-8">
+                    <h3 class="text-base font-bold text-slate-900 mb-3">Portfolio i Realizacje</h3>
+                    <div id="modal-gallery" class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                        <!-- Images loaded dynamically -->
+                    </div>
+                </div>
+
+                <!-- Price List -->
+                <div class="mb-8">
+                    <h3 class="text-base font-bold text-slate-900 mb-3">Cennik Podstawowy</h3>
+                    <div id="modal-pricelist" class="space-y-2 bg-slate-50 p-4 rounded-2xl border border-slate-100 text-sm">
+                        <!-- Loaded dynamically -->
+                    </div>
+                </div>
+
+                <!-- Reviews Section -->
+                <div>
+                    <h3 class="text-base font-bold text-slate-900 mb-3">Opinie Klientów</h3>
+                    <div id="modal-reviews" class="space-y-3">
+                        <!-- Reviews loaded dynamically -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- AUTHENTICATION MODAL -->
+    <div id="auth-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl relative">
+            <button onclick="closeAuthModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 transition">
+                <i class="fa-solid fa-xmark text-xl"></i>
+            </button>
+
+            <!-- Tabs -->
+            <div class="flex border-b border-slate-200 mb-6">
+                <button id="tab-login" onclick="switchAuthTab('login')" class="flex-1 py-3 font-bold text-sm text-brand-600 border-b-2 border-brand-600">
+                    Logowanie
+                </button>
+                <button id="tab-register" onclick="switchAuthTab('register')" class="flex-1 py-3 font-bold text-sm text-slate-400 hover:text-slate-600">
+                    Rejestracja
+                </button>
+            </div>
+
+            <!-- Login Form -->
+            <form id="form-login" onsubmit="handleAuthSubmit(event, 'login')" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Adres E-mail</label>
+                    <input type="email" required placeholder="twoj@email.pl" class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm focus:outline-none focus:border-brand-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Hasło</label>
+                    <input type="password" required placeholder="••••••••" class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm focus:outline-none focus:border-brand-500">
+                </div>
+                <button type="submit" class="w-full py-3 bg-brand-600 hover:bg-brand-700 text-white font-bold rounded-xl text-sm shadow transition">
+                    Zaloguj się
+                </button>
+            </form>
+
+            <!-- Register Form (hidden by default) -->
+            <form id="form-register" onsubmit="handleAuthSubmit(event, 'register')" class="space-y-4 hidden">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Imię i Nazwisko / Nazwa Firmy</label>
+                    <input type="text" required placeholder="Jan Kowalski" class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm focus:outline-none focus:border-brand-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Adres E-mail</label>
+                    <input type="email" required placeholder="twoj@email.pl" class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm focus:outline-none focus:border-brand-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Typ konta</label>
+                    <select class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm focus:outline-none focus:border-brand-500 bg-white">
+                        <option value="client">Szukam fachowca (Klient)</option>
+                        <option value="pro">Oferuję usługi (Fachowiec)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Hasło</label>
+                    <input type="password" required placeholder="••••••••" class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm focus:outline-none focus:border-brand-500">
+                </div>
+                <button type="submit" class="w-full py-3 bg-brand-600 hover:bg-brand-700 text-white font-bold rounded-xl text-sm shadow transition">
+                    Załóż konto
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        // MOCK DATA FOR SPECIALISTS
+        const MOCK_SPECIALISTS = [
+            {
+                id: 1,
+                name: "Marek Wiśniewski",
+                category: "hydraulik",
+                categoryName: "Hydraulik",
+                city: "Gdańsk",
+                price: 120,
+                rating: 4.9,
+                reviewsCount: 38,
+                experienceYears: 8,
+                avatar: "https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&q=80&w=250",
+                bio: "Świadczę kompleksowe usługi hydrauliczne na terenie Gdańska i okolic. Zajmuję się awariami, montażem białym, instalacjami CO oraz naprawą pieców.",
+                services: ["Montaż uszczelki / kranu", "Wymiana grzejnika", "Podłączenie pralki", "Udrożnienie rur"],
+                portfolioImages: [
+                    "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&q=80&w=400",
+                    "https://images.unsplash.com/photo-1507652313519-d4e9174996dd?auto=format&fit=crop&q=80&w=400"
+                ],
+                priceList: [
+                    { name: "Drobna naprawa / Montaż baterii", price: "120 zł" },
+                    { name: "Wymiana instalacji (punkt)", price: "250 zł" },
+                    { name: "Biały montaż (łazienka)", price: "od 400 zł" }
+                ],
+                reviews: [
+                    { user: "Piotr K.", date: "12.02.2026", rating: 5, text: "Szybka diagnoza i jeszcze szybsza naprawa wycieku pod zlewem. Polecam serdecznie!" },
+                    { user: "Anna M.", date: "03.01.2026", rating: 5, text: "Pan Marek przyjechał na czas, czysto i profesjonalnie połączył pralkę i zmywarkę." }
+                ]
+            },
+            {
+                id: 2,
+                name: "Janusz Lewandowski",
+                category: "elektryk",
+                categoryName: "Elektryk",
+                city: "Warszawa",
+                price: 150,
+                rating: 5.0,
+                reviewsCount: 52,
+                experienceYears: 12,
+                avatar: "https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&q=80&w=250",
+                bio: "Uprawnienia SEP do 1kV. Wykonuję nowe instalacje elektryczne, wymianę starych rozdzielnic, montaż oświetlenia LED oraz przeglądy instalacji.",
+                services: ["Montaż gniazdka/włącznika", "Wymiana rozdzielnicy", "Podłączenie płyty indukcyjnej"],
+                portfolioImages: [
+                    "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?auto=format&fit=crop&q=80&w=400",
+                    "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&q=80&w=400"
+                ],
+                priceList: [
+                    { name: "Montaż pojedynczego gniazdka", price: "40 zł / szt" },
+                    { name: "Podłączenie płyty indukcyjnej (z wpisem do gwarancji)", price: "180 zł" },
+                    { name: "Montaż lampy / żyrandola", price: "80 zł" }
+                ],
+                reviews: [
+                    { user: "Tomasz W.", date: "18.01.2026", rating: 5, text: "Pełen profesjonalizm! Płyta podłączona, gwarancja podbita." }
+                ]
+            },
+            {
+                id: 3,
+                name: "Remont-Bud Michał Zając",
+                category: "remonty",
+                categoryName: "Ekipa Remontowa",
+                city: "Kraków",
+                price: 200,
+                rating: 4.8,
+                reviewsCount: 29,
+                experienceYears: 6,
+                avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=250",
+                bio: "Oferujemy kompleksowe wykończenia wnętrz: szpachlowanie, malowanie, układanie płytki/gresu, zabudowy G-K i wykończenie łazienek od A do Z.",
+                services: ["Malowanie ścian", "Układanie gresu / płytek", "Sufity podwieszane", "Remont łazienki"],
+                portfolioImages: [
+                    "https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&q=80&w=400",
+                    "https://images.unsplash.com/photo-1581858726788-75bc0f6a952d?auto=format&fit=crop&q=80&w=400"
+                ],
+                priceList: [
+                    { name: "Malowanie dwukrotne", price: "25 zł / m²" },
+                    { name: "Układanie płytki/gresu", price: "110 zł / m²" },
+                    { name: "Szpachlowanie ze szlifowaniem", price: "45 zł / m²" }
+                ],
+                reviews: [
+                    { user: "Katarzyna B.", date: "29.11.2025", rating: 5, text: "Remont salonu wykonany terminowo. Ściany idealnie proste!" }
+                ]
+            },
+            {
+                id: 4,
+                name: "Adam Nowak",
+                category: "złota rączka",
+                categoryName: "Złota Rączka",
+                city: "Wrocław",
+                price: 90,
+                rating: 4.7,
+                reviewsCount: 19,
+                experienceYears: 4,
+                avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=250",
+                bio: "Pomagam w codziennych usterkach domowych. Składanie mebli (IKEA itp.), wieszanie telewizorów, naprawa drzwi, wymiana zamków.",
+                services: ["Montaż mebli", "Wieszanie TV / Półek", "Drobne naprawy"],
+                portfolioImages: [
+                    "https://images.unsplash.com/photo-1538688525198-9b88f6f53126?auto=format&fit=crop&q=80&w=400"
+                ],
+                priceList: [
+                    { name: "Składanie szafy / komody", price: "100 - 250 zł" },
+                    { name: "Montaż uchwytu TV do ściany", price: "100 zł" }
+                ],
+                reviews: [
+                    { user: "Magda S.", date: "05.02.2026", rating: 5, text: "Szybko i sprawnie złożone dwie szafy." }
+                ]
+            },
+            {
+                id: 5,
+                name: "Stolarstwo Tomasz Dąbrowski",
+                category: "stolarz",
+                categoryName: "Stolarz",
+                city: "Poznań",
+                price: 180,
+                rating: 4.9,
+                reviewsCount: 41,
+                experienceYears: 15,
+                avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=250",
+                bio: "Tworzę meble na wymiar: kuchnie, szafy wnękowe, zabudowy łazienkowe. Dbałość o najwyższą jakość materiałów i nowoczesny styl.",
+                services: ["Kuchnie na wymiar", "Szafy przesuwne", "Blaty drewniane"],
+                portfolioImages: [
+                    "https://images.unsplash.com/photo-1556911220-e15b29be8c8f?auto=format&fit=crop&q=80&w=400"
+                ],
+                priceList: [
+                    { name: "Projekt i pomiar", price: "Bezpłatnie" },
+                    { name: "Kuchnia na wymiar (mb)", price: "od 1800 zł / mb" }
+                ],
+                reviews: [
+                    { user: "Grzegorz N.", date: "10.01.2026", rating: 5, text: "Kuchnia wyszła dokładnie tak jak na wizualizacji!" }
+                ]
+            }
+        ];
+
+        // MOCK CALCULATOR SERVICES DATA
+        const CALCULATOR_ITEMS = [
+            { id: 'paint', name: 'Malowanie ścian i sufitów (2x)', unit: 'm²', pricePerUnit: 25, defaultQty: 40 },
+            { id: 'tiles', name: 'Układanie płytki / gresu', unit: 'm²', pricePerUnit: 110, defaultQty: 15 },
+            { id: 'putty', name: 'Gładź gipsowa / Szpachlowanie', unit: 'm²', pricePerUnit: 45, defaultQty: 40 },
+            { id: 'sockets', name: 'Montaż gniazdek / włączników', unit: 'szt.', pricePerUnit: 35, defaultQty: 8 },
+            { id: 'faucet', name: 'Montaż / wymiana baterii umywalkowej', unit: 'szt.', pricePerUnit: 120, defaultQty: 1 },
+            { id: 'floors', name: 'Układanie paneli podłogowych', unit: 'm²', pricePerUnit: 40, defaultQty: 25 }
+        ];
+
+        let selectedCalcItems = {};
+
+        // INITIALIZATION
+        document.addEventListener('DOMContentLoaded', () => {
+            const searchTerm = new URLSearchParams(window.location.search).get('search');
+            if (searchTerm) {
+                document.getElementById('nav-search-input').value = searchTerm;
+                document.getElementById('filter-keyword').value = searchTerm;
+            }
+
+            renderSpecialists();
+            initCalculator();
+
+            // Nav search sync
+            document.getElementById('nav-search-input').addEventListener('input', (e) => {
+                document.getElementById('filter-keyword').value = e.target.value;
+                renderSpecialists();
+            });
+        });
+
+        // RENDER SPECIALISTS LIST
+        function renderSpecialists() {
+            const container = document.getElementById('specialists-container');
+            const noResults = document.getElementById('no-results');
+            
+            // Get Filters
+            const keyword = document.getElementById('filter-keyword').value.toLowerCase();
+            const category = document.getElementById('filter-category').value;
+            const city = document.getElementById('filter-city').value;
+            const maxPrice = parseFloat(document.getElementById('filter-price').value);
+            const minRating = parseFloat(document.getElementById('filter-rating').value);
+            const minExperience = parseInt(document.getElementById('filter-experience').value);
+            const sortBy = document.getElementById('sort-select').value;
+
+            // Filter logic
+            let filtered = MOCK_SPECIALISTS.filter(spec => {
+                const matchesKeyword = spec.name.toLowerCase().includes(keyword) || 
+                                       spec.bio.toLowerCase().includes(keyword) ||
+                                       spec.services.some(s => s.toLowerCase().includes(keyword));
+                const matchesCategory = category === "" || spec.category === category;
+                const matchesCity = city === "" || spec.city === city;
+                const matchesPrice = spec.price <= maxPrice;
+                const matchesRating = spec.rating >= minRating;
+                const matchesExp = spec.experienceYears >= minExperience;
+
+                return matchesKeyword && matchesCategory && matchesCity && matchesPrice && matchesRating && matchesExp;
+            });
+
+            // Sorting logic
+            filtered.sort((a, b) => {
+                if (sortBy === 'rating') return b.rating - a.rating;
+                if (sortBy === 'price-asc') return a.price - b.price;
+                if (sortBy === 'price-desc') return b.price - a.price;
+                if (sortBy === 'experience') return b.experienceYears - a.experienceYears;
+                return 0;
+            });
+
+            // Update Count
+            document.getElementById('results-count').innerText = filtered.length;
+
+            if (filtered.length === 0) {
+                container.innerHTML = '';
+                noResults.classList.remove('hidden');
+                return;
+            }
+
+            noResults.classList.add('hidden');
+
+            // Render Cards
+            container.innerHTML = filtered.map(spec => `
+                <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm hover:shadow-md transition flex flex-col justify-between group">
+                    <div>
+                        <!-- Header with Avatar & Rating -->
+                        <div class="flex items-start justify-between gap-4 mb-4">
+                            <div class="flex items-center gap-3">
+                                <img src="${spec.avatar}" alt="${spec.name}" class="w-14 h-14 rounded-xl object-cover bg-slate-100">
+                                <div>
+                                    <h3 class="font-bold text-slate-900 group-hover:text-brand-600 transition text-base">${spec.name}</h3>
+                                    <span class="inline-block bg-brand-50 text-brand-700 text-xs font-semibold px-2 py-0.5 rounded-md mt-0.5">
+                                        ${spec.categoryName}
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <div class="flex items-center text-amber-500 font-bold text-sm justify-end gap-1">
+                                    <i class="fa-solid fa-star"></i>
+                                    <span>${spec.rating.toFixed(1)}</span>
+                                </div>
+                                <span class="text-xs text-slate-400">(${spec.reviewsCount} opinii)</span>
+                            </div>
+                        </div>
+
+                        <!-- Details & Badges -->
+                        <div class="space-y-1.5 text-xs text-slate-600 mb-4">
+                            <div class="flex items-center gap-2">
+                                <i class="fa-solid fa-location-dot text-slate-400 w-4"></i>
+                                <span>Lokalizacja: <strong>${spec.city}</strong></span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <i class="fa-solid fa-briefcase text-slate-400 w-4"></i>
+                                <span>Staż pracy: <strong>${spec.experienceYears} lat doświadczenia</strong></span>
+                            </div>
+                        </div>
+
+                        <!-- Short Services Tag list -->
+                        <div class="flex flex-wrap gap-1.5 mb-4">
+                            ${spec.services.slice(0, 3).map(serv => `
+                                <span class="bg-slate-100 text-slate-600 text-xs px-2 py-1 rounded-md">${serv}</span>
+                            `).join('')}
+                        </div>
+                    </div>
+
+                    <!-- Footer / Price & Action -->
+                    <div class="border-t border-slate-100 pt-3 flex items-center justify-between mt-2">
+                        <div>
+                            <span class="text-xs text-slate-400 block">Stawka szacunkowa</span>
+                            <span class="text-lg font-bold text-slate-900">${spec.price} zł <span class="text-xs font-normal text-slate-500">/h</span></span>
+                        </div>
+                        <button onclick="openProfileModal(${spec.id})" class="px-4 py-2 bg-slate-900 hover:bg-brand-600 text-white rounded-xl text-xs font-semibold shadow transition flex items-center gap-1.5">
+                            Zobacz profil
+                            <i class="fa-solid fa-chevron-right text-[10px]"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // HERO SEARCH ACTION
+        function applyHeroSearch() {
+            const cat = document.getElementById('hero-category').value;
+            const city = document.getElementById('hero-city').value;
+
+            document.getElementById('filter-category').value = cat;
+            document.getElementById('filter-city').value = city;
+
+            renderSpecialists();
+
+            // Scroll down smoothly to list
+            document.getElementById('specialists-container').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // RESET FILTERS
+        function resetFilters() {
+            document.getElementById('filter-keyword').value = '';
+            document.getElementById('filter-category').value = '';
+            document.getElementById('filter-city').value = '';
+            document.getElementById('filter-price').value = 250;
+            document.getElementById('price-val').innerText = '250 zł';
+            document.getElementById('filter-rating').value = '0';
+            document.getElementById('filter-experience').value = '0';
+            document.getElementById('nav-search-input').value = '';
+            renderSpecialists();
+        }
+
+        function updatePriceLabel(val) {
+            document.getElementById('price-val').innerText = val + ' zł';
+        }
+
+        // PROFILE / PORTFOLIO MODAL LOGIC
+        function openProfileModal(specId) {
+            const spec = MOCK_SPECIALISTS.find(s => s.id === specId);
+            if (!spec) return;
+
+            document.getElementById('modal-avatar').src = spec.avatar;
+            document.getElementById('modal-name').innerText = spec.name;
+            document.getElementById('modal-category').innerText = spec.categoryName;
+            document.getElementById('modal-city').innerText = spec.city;
+            document.getElementById('modal-exp').innerText = spec.experienceYears + ' lat';
+            document.getElementById('modal-price').innerText = spec.price + ' zł/h';
+            document.getElementById('modal-rating').innerText = '★ ' + spec.rating.toFixed(1) + ' (' + spec.reviewsCount + ')';
+            document.getElementById('modal-bio').innerText = spec.bio;
+
+            // Gallery
+            const gallery = document.getElementById('modal-gallery');
+            gallery.innerHTML = spec.portfolioImages.map(img => `
+                <img src="${img}" alt="Realizacja" class="w-full h-32 object-cover rounded-xl border border-slate-200">
+            `).join('');
+
+            // Price list
+            const priceList = document.getElementById('modal-pricelist');
+            priceList.innerHTML = spec.priceList.map(item => `
+                <div class="flex justify-between items-center py-1 border-b border-slate-200/60 last:border-0">
+                    <span class="text-slate-700 font-medium">${item.name}</span>
+                    <span class="font-bold text-brand-700">${item.price}</span>
+                </div>
+            `).join('');
+
+            // Reviews
+            const reviews = document.getElementById('modal-reviews');
+            reviews.innerHTML = spec.reviews.map(rev => `
+                <div class="bg-slate-50 p-3 rounded-xl border border-slate-100 text-xs">
+                    <div class="flex justify-between items-center mb-1">
+                        <span class="font-bold text-slate-800">${rev.user}</span>
+                        <span class="text-slate-400">${rev.date}</span>
+                    </div>
+                    <div class="text-amber-500 mb-1">
+                        ${'★'.repeat(rev.rating)}
+                    </div>
+                    <p class="text-slate-600">${rev.text}</p>
+                </div>
+            `).join('');
+
+            document.getElementById('profile-modal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeProfileModal() {
+            document.getElementById('profile-modal').classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }
+
+        // INTERACTIVE CALCULATOR LOGIC
+        function initCalculator() {
+            const container = document.getElementById('calculator-items');
+            container.innerHTML = CALCULATOR_ITEMS.map(item => `
+                <div class="bg-white/5 border border-white/10 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    <div class="flex items-center gap-3">
+                        <input type="checkbox" id="calc-check-${item.id}" onchange="toggleCalcItem('${item.id}')" class="w-5 h-5 accent-brand-500 rounded cursor-pointer">
+                        <div>
+                            <label for="calc-check-${item.id}" class="font-semibold text-sm text-white cursor-pointer">${item.name}</label>
+                            <span class="block text-xs text-slate-400">${item.pricePerUnit} zł / ${item.unit}</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2 self-end sm:self-auto">
+                        <label class="text-xs text-slate-400">Ilość (${item.unit}):</label>
+                        <input type="number" id="calc-qty-${item.id}" value="${item.defaultQty}" min="1" oninput="updateCalcQuantity('${item.id}')" 
+                               class="w-20 px-2 py-1 bg-slate-800 border border-slate-700 rounded-lg text-sm text-white text-center focus:outline-none focus:border-brand-500">
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function toggleCalcItem(id) {
+            const checked = document.getElementById(`calc-check-${id}`).checked;
+            if (checked) {
+                const item = CALCULATOR_ITEMS.find(i => i.id === id);
+                const qty = parseInt(document.getElementById(`calc-qty-${id}`).value) || 1;
+                selectedCalcItems[id] = { ...item, qty };
+            } else {
+                delete selectedCalcItems[id];
+            }
+            updateCalcSummary();
+        }
+
+        function updateCalcQuantity(id) {
+            if (selectedCalcItems[id]) {
+                const qty = parseInt(document.getElementById(`calc-qty-${id}`).value) || 1;
+                selectedCalcItems[id].qty = qty;
+                updateCalcSummary();
+            }
+        }
+
+        function updateCalcSummary() {
+            const summaryList = document.getElementById('calc-summary-list');
+            const totalEl = document.getElementById('calc-total');
+
+            const keys = Object.keys(selectedCalcItems);
+            if (keys.length === 0) {
+                summaryList.innerHTML = '<p class="text-slate-400 italic">Brak wybranych usług.</p>';
+                totalEl.innerText = '0 zł';
+                return;
+            }
+
+            let total = 0;
+            summaryList.innerHTML = keys.map(k => {
+                const item = selectedCalcItems[k];
+                const sum = item.qty * item.pricePerUnit;
+                total += sum;
+                return `
+                    <div class="flex justify-between items-center text-xs py-1 border-b border-white/5">
+                        <span class="truncate max-w-[180px]">${item.name} (${item.qty} ${item.unit})</span>
+                        <span class="font-bold text-brand-300">${sum} zł</span>
+                    </div>
+                `;
+            }).join('');
+
+            totalEl.innerText = total.toLocaleString('pl-PL') + ' zł';
+        }
+
+        function requestQuoteWithCalc() {
+            if (Object.keys(selectedCalcItems).length === 0) {
+                alert('Proszę najpierw zaznaczyć przynajmniej jedną usługę z kalkulatora.');
+                return;
+            }
+            alert('Zapytanie z wyceną zostało wysłane do pasujących fachowców w Twoim mieście!');
+        }
+
+        // AUTH MODAL LOGIC
+        function openAuthModal() {
+            document.getElementById('auth-modal').classList.remove('hidden');
+        }
+
+        function closeAuthModal() {
+            document.getElementById('auth-modal').classList.add('hidden');
+        }
+
+        function switchAuthTab(tab) {
+            const tabLogin = document.getElementById('tab-login');
+            const tabRegister = document.getElementById('tab-register');
+            const formLogin = document.getElementById('form-login');
+            const formRegister = document.getElementById('form-register');
+
+            if (tab === 'login') {
+                tabLogin.className = "flex-1 py-3 font-bold text-sm text-brand-600 border-b-2 border-brand-600";
+                tabRegister.className = "flex-1 py-3 font-bold text-sm text-slate-400 hover:text-slate-600";
+                formLogin.classList.remove('hidden');
+                formRegister.classList.add('hidden');
+            } else {
+                tabRegister.className = "flex-1 py-3 font-bold text-sm text-brand-600 border-b-2 border-brand-600";
+                tabLogin.className = "flex-1 py-3 font-bold text-sm text-slate-400 hover:text-slate-600";
+                formRegister.classList.remove('hidden');
+                formLogin.classList.add('hidden');
+            }
+        }
+
+        function handleAuthSubmit(e, type) {
+            e.preventDefault();
+            alert(type === 'login' ? 'Pomyślnie zalogowano!' : 'Konto zostało pomyślnie utworzone!');
+            closeAuthModal();
+        }
+    </script>
+</body>
+</html>

@@ -1,16 +1,51 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Lokalny Fachowiec</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="script.js"></script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Black+Ops+One&family=PT+Sans+Narrow:wght@400;700&family=Science+Gothic:wght@100..900&family=Tektur:wght@400..900&display=swap" rel="stylesheet">
 </head>
 <body>
+    <nav>
+        <div class="upper-nav">
+            <img src="images/logo.png" alt="Logo" width="80" height="80">
+            <img src="images/lokalnyfachowiec_text.png" alt="Lokalny Fachowiec" width="250" height="80">
+            </form>
+            <button id="calc-btn">Kalkulator Cen</button>
+            <button id="log-btn">Rejestracja/Logowanie</button>
+        </div>
+    </nav>
+    <aside id="sidebar">
+        <h2>Filtry</h2>
+        <label for="filter-keyword">Szukaj:</label>
+        <input type="text" id="filter-keyword" placeholder="Wpisz słowo kluczowe...">
 
-    <p>Welcome to my website!</p>
-    <dev>
-        <p>This is a paragraph inside a div element.</p>
-    </dev>
+        <p><label for="filter-category">Kategoria:</label>
+        <select id="filter-category">
+            <option value="">Wszystkie</option>
+            <option value="elektryk">Elektryk</option>
+            <option value="hydraulik">Hydraulik</option>
+            <option value="stolarz">Stolarz</option>
+
+        </select>
+                <p><label for="filter-category">Lokalizacja:</label>
+        <select id="filter-category">
+            <option value="">Gdańsk</option>
+            <option value="elektryk">Warszawa</option>
+            <option value="hydraulik">Kraków</option>
+            <option value="stolarz">Wrocław</option>
+
+        </select>
+        <p><label for="filter-category">Cena:</label>
+        <select id="filter-category">
+            
+
 
 </body>
 </html>
