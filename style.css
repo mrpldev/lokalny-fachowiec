@@ -52,3 +52,62 @@ button {
     font-family: "PT Sans Narrow", sans-serif;
     font-weight: bold;
 }
+
+aside {
+    box-sizing: border-box;
+    width: min(100% - 32px, 360px);
+    margin: 24px 16px;
+    padding: 24px;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    background: #fff;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.1);
+    color: #1e293b;
+    font-family: "PT Sans Narrow", sans-serif;
+}
+
+aside h2 {
+    margin: 0 0 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #e2e8f0;
+    font-size: 26px;
+}
+
+aside p {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin: 18px 0 8px;
+}
+
+aside label {
+    font-size: 17px;
+    font-weight: 700;
+}
+
+aside input[type="text"],
+aside select {
+    box-sizing: border-box;
+    width: 100%;
+    min-height: 42px;
+    padding: 8px 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    background: #fff;
+    color: #334155;
+    font: 16px "PT Sans Narrow", sans-serif;
+}
+
+aside input[type="text"]:focus,
+aside select:focus {
+    border-color: #849500;
+    outline: 3px solid rgba(189, 209, 11, 0.2);
+}
+
+aside input[type="range"] {
+    width: 100%;
+    margin: 4px 0 10px;
+    accent-color: #849500;
+    cursor: pointer;
+}

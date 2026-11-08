@@ -21,6 +21,9 @@
             <button id="log-btn">Rejestracja/Logowanie</button>
         </div>
     </nav>
+
+
+    
     <aside id="sidebar">
         <h2>Filtry</h2>
         <label for="filter-keyword">Szukaj:</label>
@@ -42,9 +45,42 @@
             <option value="stolarz">Wrocław</option>
 
         </select>
-        <p><label for="filter-category">Cena:</label>
-        <select id="filter-category">
-            
+        <p>
+            <label for="filter-price">Stawka za godzinę:</label>
+            <span id="price-val">250 zł</span>
+        </p>
+        <input id="filter-price" type="range" min="0" max="500" step="1" value="250">
+
+        <p><label for="filter-rating-from">Ocena od:</label></p>
+        <select id="filter-rating-from">
+            <option value="0">Dowolna</option>
+            <option value="1">★ 1.0</option>
+            <option value="2">★ 2.0</option>
+            <option value="3">★ 3.0</option>
+            <option value="3.5">★ 3.5</option>
+            <option value="4">★ 4.0</option>
+            <option value="4.5">★ 4.5</option>
+            <option value="4.8">★ 4.8</option>
+            <option value="5">★ 5.0</option>
+        </select>
+        <p><label for="filter-rating-to">Ocena do:</label></p>
+        <select id="filter-rating-to">
+            <option value="5">★ 5.0</option>
+            <option value="4.8">★ 4.8</option>
+            <option value="4.5">★ 4.5</option>
+            <option value="4">★ 4.0</option>
+            <option value="3.5">★ 3.5</option>
+            <option value="3">★ 3.0</option>
+            <option value="2">★ 2.0</option>
+            <option value="1">★ 1.0</option>
+        </select>
+
+        <p>
+            <label for="filter-experience">Staż:</label>
+            <span id="experience-val">0 lat</span>
+        </p>
+        <input id="filter-experience" type="range" min="0" max="30" step="1" value="0">
+    </aside>
 
 
 </body>
