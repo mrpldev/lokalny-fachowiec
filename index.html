@@ -22,13 +22,21 @@
         </div>
     </nav>
 
-
-    
-    <aside id="sidebar">
-        <h2>Filtry</h2>
-        <label for="filter-keyword">Szukaj:</label>
+    <header>
+        <label for="filter-keyword">Szukaj fachowca:</label>
         <input type="text" id="filter-keyword" placeholder="Wpisz słowo kluczowe...">
 
+    </header>
+
+    <div class="content-layout">
+    <main>
+        <div id="professionals-container">
+            <p>Tutaj będą profile fachowców</p>
+        </div>
+    </main>
+
+    <aside id="sidebar">
+        <h2>Filtry</h2>
         <p><label for="filter-category">Kategoria:</label>
         <select id="filter-category">
             <option value="">Wszystkie</option>
@@ -77,11 +85,15 @@
 
         <p>
             <label for="filter-experience">Staż:</label>
-            <span id="experience-val">0 lat</span>
+            <span id="experience-val">od 0 lat</span>
         </p>
         <input id="filter-experience" type="range" min="0" max="30" step="1" value="0">
     </aside>
-
+    </div>
+    <footer>
+        <p>&copy; 2026 Lokalny Fachowiec. Wszelkie prawa zastrzeżone.</p>
+        <p>Autorzy: Iban Mulitsman i Jewbeni Pustoman</p>
+    </footer>
 
 </body>
 </html>

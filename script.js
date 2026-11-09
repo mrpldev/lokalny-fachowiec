@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     experienceSlider.addEventListener('input', () => {
-        experienceValue.textContent = `${experienceSlider.value} lat`;
+        experienceValue.textContent = `od ${experienceSlider.value} lat`;
     });
 });
 
