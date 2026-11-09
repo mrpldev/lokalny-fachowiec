@@ -181,13 +181,6 @@ main {
     font-family: "PT Sans Narrow", sans-serif;
 }
 
-main h2 {
-    margin: 0 0 20px;
-    padding-bottom: 12px;
-    border-bottom: 1px solid #e2e8f0;
-    font-size: 26px;
-}
-
 main .professional-card {
     box-sizing: border-box;
     width: 100%;
@@ -223,3 +216,4 @@ footer {
     font-family: "PT Sans Narrow", sans-serif;
     text-align: center;
 }
+
