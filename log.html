@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Rejestracja i logowanie | Lokalny Fachowiec</title>
+	<link rel="stylesheet" href="style.css">
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Black+Ops+One&family=PT+Sans+Narrow:wght@400;700&family=Science+Gothic:wght@100..900&family=Tektur:wght@400..900&display=swap" rel="stylesheet">
+</head>
+<body>
+	<nav>
+		<div class="upper-nav">
+			<img src="images/logo.png" alt="Logo" width="80" height="80">
+			<img src="images/lokalnyfachowiec_text.png" alt="Lokalny Fachowiec" width="250" height="80">
+			<a class="auth-back" href="index.html">Strona główna</a>
+		</div>
+	</nav>
+
+	<main class="auth-main">
+		<h2>Rejestracja i logowanie</h2>
+		<div class="auth-switch" aria-label="Wybierz formularz">
+			<button type="button" id="login-tab" class="active" aria-pressed="true">Logowanie</button>
+			<button type="button" id="register-tab" aria-pressed="false">Rejestracja</button>
+		</div>
+
+		<form id="login-form" class="auth-form">
+			<label for="login-email">Adres e-mail:</label>
+			<input id="login-email" name="email" type="email" autocomplete="email" required>
+
+			<label for="login-password">Hasło:</label>
+			<input id="login-password" name="password" type="password" autocomplete="current-password" required>
+
+			<button type="submit">Zaloguj się</button>
+		</form>
+
+		<form id="register-form" class="auth-form" hidden>
+			<label for="register-name">Imię i nazwisko:</label>
+			<input id="register-name" name="name" type="text" autocomplete="name" required>
+
+			<label for="register-email">Adres e-mail:</label>
+			<input id="register-email" name="email" type="email" autocomplete="email" required>
+
+			<label for="register-password">Hasło (minimum 8 znaków):</label>
+			<input id="register-password" name="password" type="password" autocomplete="new-password" minlength="8" required>
+
+			<button type="submit">Utwórz konto</button>
+		</form>
+		<p id="auth-message" class="auth-message" aria-live="polite"></p>
+	</main>
+
+	<footer>
+		<p>&copy; 2026 Lokalny Fachowiec. Wszelkie prawa zastrzeżone.</p>
+		<p>Autorzy: Ivan Mulitsa &amp; Yevhenii Pustovoit</p>
+	</footer>
+
+	<script>
+		const loginTab = document.getElementById('login-tab');
+		const registerTab = document.getElementById('register-tab');
+		const loginForm = document.getElementById('login-form');
+		const registerForm = document.getElementById('register-form');
+		const authMessage = document.getElementById('auth-message');
+
+		function showForm(isLogin) {
+			loginForm.hidden = !isLogin;
+			registerForm.hidden = isLogin;
+			loginTab.classList.toggle('active', isLogin);
+			registerTab.classList.toggle('active', !isLogin);
+			loginTab.setAttribute('aria-pressed', String(isLogin));
+			registerTab.setAttribute('aria-pressed', String(!isLogin));
+			authMessage.textContent = '';
+		}
+
+		loginTab.addEventListener('click', () => showForm(true));
+		registerTab.addEventListener('click', () => showForm(false));
+
+		[loginForm, registerForm].forEach((form) => {
+			form.addEventListener('submit', (event) => {
+				event.preventDefault();
+				authMessage.textContent = 'Logowanie i rejestracja wymagają podłączenia serwera.';
+			});
+		});
+	</script>
+</body>
+</html>

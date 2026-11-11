@@ -217,3 +217,90 @@ footer {
     text-align: center;
 }
 
+.auth-back {
+    display: inline-block;
+    margin: 4px 2px;
+    padding: 15px 32px;
+    border-radius: 12px;
+    background: rgba(189, 209, 11, 0.996);
+    color: white;
+    font: bold 27px "PT Sans Narrow", sans-serif;
+    text-align: center;
+    text-decoration: none;
+    text-shadow: 1px 2px 3px rgba(0, 0, 0, 0.55);
+    -webkit-text-stroke: 0.5px rgba(0, 0, 0, 0.35);
+}
+
+.auth-main {
+    max-width: 620px;
+    margin: 24px auto;
+}
+
+.auth-switch {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+}
+
+.auth-switch button {
+    flex: 1;
+}
+
+.auth-switch button.active {
+    background: #849500;
+}
+
+.auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    font-family: "PT Sans Narrow", sans-serif;
+}
+
+.auth-form[hidden] {
+    display: none;
+}
+
+.auth-form label {
+    font-size: 17px;
+    font-weight: 700;
+}
+
+.auth-form input {
+    box-sizing: border-box;
+    width: 100%;
+    min-height: 42px;
+    margin-bottom: 8px;
+    padding: 8px 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    background: #fff;
+    color: #334155;
+    font: 16px "PT Sans Narrow", sans-serif;
+}
+
+.auth-form input:focus {
+    border-color: #849500;
+    outline: 3px solid rgba(189, 209, 11, 0.2);
+}
+
+.auth-form button {
+    align-self: flex-start;
+}
+
+.auth-message {
+    margin: 12px 0 0;
+    font-size: 16px;
+}
+
+@media (max-width: 700px) {
+    .auth-main {
+        width: calc(100% - 32px);
+        margin: 24px 16px;
+    }
+
+    .auth-form button {
+        align-self: stretch;
+    }
+}
+
