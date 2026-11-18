@@ -4,7 +4,7 @@ import cors from 'cors';
 import mysql from 'mysql2/promise';
 
 const app = express();
-app.use(cors({ origin: 'http://localhost:5173' }));
+app.use(cors({ origin: process.env.CORS_ORIGIN || 'http://localhost:5173' }));
 
 const db = mysql.createPool({
   host: process.env.DB_HOST,
@@ -23,4 +23,5 @@ app.get('/api/items', async (req, res) => {
   }
 });
 
-app.listen(3001, () => console.log('API запущен: http://localhost:3001'));
+const port = process.env.PORT || 3001;
+app.listen(port, () => console.log(`API запущен на порту ${port}`));
