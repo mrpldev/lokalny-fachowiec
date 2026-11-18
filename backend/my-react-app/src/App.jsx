@@ -2,16 +2,18 @@ import { useEffect, useState } from 'react';
 import './App.css';
 
 function App() {
-  const [items, setItems] = useState([]);
+  const [tenders, setTenders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
     const controller = new AbortController();
 
-    async function loadItems() {
+    async function loadTenders() {
       try {
-        const response = await fetch('http://localhost:3001/api/items', {
+        const apiUrl = (import.meta.env.VITE_API_URL || 'http://localhost:3001')
+          .replace(/\/$/, '');
+        const response = await fetch(`${apiUrl}/api/tenders`, {
           signal: controller.signal,
         });
         const data = await response.json();
@@ -20,7 +22,7 @@ function App() {
           throw new Error(data.error || 'Не удалось загрузить данные');
         }
 
-        setItems(data);
+        setTenders(data);
       } catch (loadError) {
         if (loadError.name !== 'AbortError') {
           setError(loadError.message);
@@ -32,23 +34,23 @@ function App() {
       }
     }
 
-    loadItems();
+    loadTenders();
     return () => controller.abort();
   }, []);
 
-  const columns = items.length > 0 ? Object.keys(items[0]) : [];
+  const columns = tenders.length > 0 ? Object.keys(tenders[0]) : [];
 
   return (
-    <main className="items-page">
-      <h1>Записи из базы данных</h1>
+    <main className="tenders-page">
+      <h1>Заказы</h1>
       {loading && <p>Загрузка...</p>}
-      {error && <p className="items-error">{error}</p>}
-      {!loading && !error && items.length === 0 && (
-        <p>В таблице items пока нет записей.</p>
+      {error && <p className="tenders-error">{error}</p>}
+      {!loading && !error && tenders.length === 0 && (
+        <p>Заказов пока нет.</p>
       )}
-      {!loading && !error && items.length > 0 && (
-        <div className="items-table-wrap">
-          <table className="items-table">
+      {!loading && !error && tenders.length > 0 && (
+        <div className="tenders-table-wrap">
+          <table className="tenders-table">
             <thead>
               <tr>
                 {columns.map((column) => (
@@ -57,15 +59,15 @@ function App() {
               </tr>
             </thead>
             <tbody>
-              {items.map((item, index) => (
-                <tr key={item.id ?? index}>
+              {tenders.map((tender) => (
+                <tr key={tender.id}>
                   {columns.map((column) => (
                     <td key={column}>
-                      {item[column] == null
+                      {tender[column] == null
                         ? '—'
-                        : typeof item[column] === 'object'
-                          ? JSON.stringify(item[column])
-                          : String(item[column])}
+                        : typeof tender[column] === 'object'
+                          ? JSON.stringify(tender[column])
+                          : String(tender[column])}
                     </td>
                   ))}
                 </tr>

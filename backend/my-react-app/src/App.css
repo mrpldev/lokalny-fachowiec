@@ -183,40 +183,40 @@
   }
 }
 
-.items-page {
+.tenders-page {
   box-sizing: border-box;
   width: 100%;
   padding: 24px;
   text-align: left;
 }
 
-.items-page h1 {
+.tenders-page h1 {
   font-size: 32px;
   margin: 0 0 24px;
 }
 
-.items-table-wrap {
+.tenders-table-wrap {
   overflow-x: auto;
 }
 
-.items-table {
+.tenders-table {
   width: 100%;
   border-collapse: collapse;
   text-align: left;
 }
 
-.items-table th,
-.items-table td {
+.tenders-table th,
+.tenders-table td {
   padding: 10px 12px;
   border: 1px solid var(--border);
   white-space: nowrap;
 }
 
-.items-table th {
+.tenders-table th {
   color: var(--text-h);
   background: var(--social-bg);
 }
 
-.items-error {
+.tenders-error {
   color: #c62828;
 }

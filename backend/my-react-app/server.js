@@ -15,13 +15,18 @@ const db = mysql.createPool({
   ssl: process.env.DB_SSL === 'true' ? {} : undefined,
 });
 
-app.get('/api/items', async (req, res) => {
+app.get('/api/tenders', async (req, res) => {
   try {
-    const [rows] = await db.query('SELECT * FROM items');
+    const [rows] = await db.query(`
+      SELECT id, title, description, category, status, budget_min, budget_max,
+             city, created_at, expires_at, views_count, responses_count
+      FROM tenders
+      ORDER BY created_at DESC
+    `);
     res.json(rows);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: 'Ошибка при чтении базы данных' });
+    res.status(500).json({ error: 'Ошибка при чтении заказов' });
   }
 });
 
