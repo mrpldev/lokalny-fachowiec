@@ -1,4 +1,5 @@
 const API_URL = 'https://lokalny-fachowiec-api.onrender.com';
+const TENDER_IMAGE_COUNT = 8;
 const statusLabels = {
     aktywny: 'Aktywne',
     zakończony: 'Zakończone',
@@ -127,9 +128,23 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function createTenderCard(tender) {
+        const link = document.createElement('a');
+        link.className = 'tender-card-link';
+        link.href = `tender.html?id=${encodeURIComponent(tender.id)}`;
+
         const card = document.createElement('article');
         card.className = 'tender-card';
-        card.append(makeTextElement('h2', 'tender-title', tender.title || 'Zlecenie bez tytułu'));
+        const imageNumber = ((Number(tender.id) - 1) % TENDER_IMAGE_COUNT) + 1;
+        const image = document.createElement('img');
+        image.className = 'tender-card-image';
+        image.src = `img/${imageNumber}.png`;
+        image.alt = tender.title || 'Zdjęcie zlecenia';
+        image.addEventListener('error', () => image.remove(), { once: true });
+        card.append(image);
+
+        const content = document.createElement('div');
+        content.className = 'tender-card-content';
+        content.append(makeTextElement('h2', 'tender-title', tender.title || 'Zlecenie bez tytułu'));
 
         const details = [
             tender.category || 'Bez kategorii',
@@ -137,8 +152,8 @@ document.addEventListener('DOMContentLoaded', () => {
             formatBudget(tender),
             statusLabels[tender.status] || tender.status || 'Status nieznany',
         ];
-        card.append(makeTextElement('p', 'tender-meta', details.join(' · ')));
-        card.append(makeTextElement('p', 'tender-description', tender.description || 'Brak opisu.'));
+        content.append(makeTextElement('p', 'tender-meta', details.join(' · ')));
+        content.append(makeTextElement('p', 'tender-description', tender.description || 'Brak opisu.'));
 
         const extraDetails = [];
         const createdAt = formatDate(tender.created_at);
@@ -155,10 +170,12 @@ document.addEventListener('DOMContentLoaded', () => {
             extraDetails.push('Autor bez opinii');
         }
         if (extraDetails.length) {
-            card.append(makeTextElement('p', 'tender-extra', extraDetails.join(' · ')));
+            content.append(makeTextElement('p', 'tender-extra', extraDetails.join(' · ')));
         }
 
-        return card;
+        card.append(content);
+        link.append(card);
+        return link;
     }
 
     function renderTenders() {

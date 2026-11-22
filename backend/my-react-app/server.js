@@ -208,6 +208,53 @@ app.post('/api/login', async (req, res) => {
   }
 });
 
+app.get('/api/tenders/:id', async (req, res) => {
+  const tenderId = Number(req.params.id);
+  if (!Number.isSafeInteger(tenderId) || tenderId < 1) {
+    return res.status(400).json({ error: 'Nieprawidłowy identyfikator zlecenia.' });
+  }
+
+  try {
+    const [updateResult] = await db.execute(
+      'UPDATE tenders SET views_count = COALESCE(views_count, 0) + 1 WHERE id = ?',
+      [tenderId],
+    );
+    if (updateResult.affectedRows === 0) {
+      return res.status(404).json({ error: 'Nie znaleziono takiego zlecenia.' });
+    }
+
+    const [rows] = await db.execute(`
+      SELECT t.id, t.title, t.description, t.category, t.status,
+             t.budget_min, t.budget_max, t.city, t.created_at, t.expires_at,
+             t.views_count, t.responses_count,
+             u.first_name AS author_first_name,
+             u.last_name AS author_last_name,
+             u.experience_years AS author_experience_years,
+             review_stats.average_rating AS author_rating,
+             COALESCE(review_stats.review_count, 0) AS author_review_count
+      FROM tenders t
+      LEFT JOIN users u ON u.id = t.user_id
+      LEFT JOIN (
+        SELECT target_user_id, ROUND(AVG(rating), 1) AS average_rating,
+               COUNT(rating) AS review_count
+        FROM reviews
+        GROUP BY target_user_id
+      ) AS review_stats ON review_stats.target_user_id = t.user_id
+      WHERE t.id = ?
+      LIMIT 1
+    `, [tenderId]);
+
+    if (!rows.length) {
+      return res.status(404).json({ error: 'Nie znaleziono takiego zlecenia.' });
+    }
+
+    return res.json(rows[0]);
+  } catch (error) {
+    console.error('Błąd pobierania szczegółów zlecenia:', error);
+    return res.status(500).json({ error: 'Nie udało się pobrać zlecenia.' });
+  }
+});
+
 app.get('/api/tenders', async (req, res) => {
   try {
     const [rows] = await db.query(`
