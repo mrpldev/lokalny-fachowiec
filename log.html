@@ -83,6 +83,35 @@
 		const authMessage = document.getElementById('auth-message');
 		const apiUrl = 'https://lokalny-fachowiec-api.onrender.com';
 
+		async function postApi(path, payload, failureMessage) {
+			const response = await fetch(`${apiUrl}${path}`, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify(payload),
+			});
+			const contentType = response.headers.get('content-type') || '';
+
+			if (!contentType.includes('application/json')) {
+				if (response.status === 404) {
+					throw new Error('Ten adres API nie został jeszcze opublikowany na Render.');
+				}
+				throw new Error(`API zwróciło nieprawidłową odpowiedź (HTTP ${response.status}).`);
+			}
+
+			let result;
+			try {
+				result = await response.json();
+			} catch {
+				throw new Error('API zwróciło nieprawidłowe dane JSON.');
+			}
+
+			if (!response.ok) {
+				throw new Error(result.error || failureMessage);
+			}
+
+			return result;
+		}
+
 		function showForm(isLogin) {
 			loginForm.hidden = !isLogin;
 			registerForm.hidden = isLogin;
@@ -96,9 +125,24 @@
 		loginTab.addEventListener('click', () => showForm(true));
 		registerTab.addEventListener('click', () => showForm(false));
 
-		loginForm.addEventListener('submit', (event) => {
+		loginForm.addEventListener('submit', async (event) => {
 			event.preventDefault();
-			authMessage.textContent = 'Logowanie nie jest jeszcze dostępne.';
+			authMessage.textContent = 'Logowanie...';
+			const submitButton = loginForm.querySelector('button[type="submit"]');
+			submitButton.disabled = true;
+
+			const formData = new FormData(loginForm);
+			const payload = Object.fromEntries(formData.entries());
+
+			try {
+				const result = await postApi('/api/login', payload, 'Nie udało się zalogować.');
+				loginForm.reset();
+				authMessage.textContent = `Zalogowano pomyślnie. Witaj, ${result.user.firstName}!`;
+			} catch (error) {
+				authMessage.textContent = error.message || 'Nie można połączyć się z serwerem.';
+			} finally {
+				submitButton.disabled = false;
+			}
 		});
 
 		registerForm.addEventListener('submit', async (event) => {
@@ -111,17 +155,7 @@
 			const payload = Object.fromEntries(formData.entries());
 
 			try {
-				const response = await fetch(`${apiUrl}/api/register`, {
-					method: 'POST',
-					headers: { 'Content-Type': 'application/json' },
-					body: JSON.stringify(payload),
-				});
-				const result = await response.json();
-
-				if (!response.ok) {
-					throw new Error(result.error || 'Nie udało się utworzyć konta.');
-				}
-
+				await postApi('/api/register', payload, 'Nie udało się utworzyć konta.');
 				registerForm.reset();
 				showForm(true);
 				authMessage.textContent = 'Konto zostało utworzone. Możesz się zalogować.';

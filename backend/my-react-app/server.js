@@ -2,7 +2,11 @@ import dotenv from 'dotenv';
 import express from 'express';
 import cors from 'cors';
 import mysql from 'mysql2/promise';
-import { randomBytes, scrypt as scryptCallback } from 'node:crypto';
+import {
+  randomBytes,
+  scrypt as scryptCallback,
+  timingSafeEqual,
+} from 'node:crypto';
 import { promisify } from 'node:util';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -41,6 +45,26 @@ const db = mysql.createPool({
 
 const scrypt = promisify(scryptCallback);
 const allowedRoles = new Set(['majster', 'brygada', 'firma']);
+const dummySalt = '0123456789abcdef0123456789abcdef';
+
+async function hashPassword(password) {
+  const salt = randomBytes(16).toString('hex');
+  const derivedKey = await scrypt(password, salt, 64);
+  return `scrypt$${salt}$${derivedKey.toString('hex')}`;
+}
+
+async function verifyPassword(password, passwordHash) {
+  const match = /^scrypt\$([a-f\d]{32})\$([a-f\d]{128})$/i.exec(passwordHash || '');
+  if (!match) {
+    await scrypt(password, dummySalt, 64);
+    return false;
+  }
+
+  const [, salt, storedKeyHex] = match;
+  const storedKey = Buffer.from(storedKeyHex, 'hex');
+  const derivedKey = await scrypt(password, salt, storedKey.length);
+  return timingSafeEqual(derivedKey, storedKey);
+}
 
 app.post('/api/register', async (req, res) => {
   const {
@@ -92,9 +116,7 @@ app.post('/api/register', async (req, res) => {
   }
 
   try {
-    const salt = randomBytes(16).toString('hex');
-    const derivedKey = await scrypt(password, salt, 64);
-    const passwordHash = `scrypt$${salt}$${derivedKey.toString('hex')}`;
+    const passwordHash = await hashPassword(password);
     const [result] = await db.execute(
       `INSERT INTO users
         (email, phone, password_hash, first_name, last_name, role, city, registered_at, description)
@@ -128,6 +150,44 @@ app.post('/api/register', async (req, res) => {
 
     console.error('Błąd rejestracji użytkownika:', error);
     return res.status(500).json({ error: 'Nie udało się utworzyć konta.' });
+  }
+});
+
+app.post('/api/login', async (req, res) => {
+  const { email, password } = req.body || {};
+  if (typeof email !== 'string' || typeof password !== 'string'
+      || !email.trim() || !password || password.length > 128) {
+    return res.status(400).json({ error: 'Podaj adres e-mail i hasło.' });
+  }
+
+  try {
+    const [rows] = await db.execute(
+      `SELECT id, email, password_hash, first_name, last_name, role
+       FROM users
+       WHERE email = ?
+       LIMIT 1`,
+      [email.trim().toLowerCase()],
+    );
+    const user = rows[0];
+    const passwordMatches = await verifyPassword(password, user?.password_hash);
+
+    if (!user || !passwordMatches) {
+      return res.status(401).json({ error: 'Nieprawidłowy e-mail lub hasło.' });
+    }
+
+    return res.json({
+      message: 'Zalogowano pomyślnie.',
+      user: {
+        id: user.id,
+        email: user.email,
+        firstName: user.first_name,
+        lastName: user.last_name,
+        role: user.role,
+      },
+    });
+  } catch (error) {
+    console.error('Błąd logowania użytkownika:', error);
+    return res.status(500).json({ error: 'Nie udało się zalogować.' });
   }
 });
 
