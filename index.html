@@ -3,31 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lokalny Fachowiec</title>
-    <link rel="stylesheet" href="style.css">
-    <script src="common.js" defer></script>
-    <script src="script.js" defer></script>
+    <title>Zlecenia | Lokalny Fachowiec</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Black+Ops+One&family=PT+Sans+Narrow:wght@400;700&family=Science+Gothic:wght@100..900&family=Tektur:wght@400..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=PT+Sans+Narrow:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+
+    <script src="common.js" defer></script>
+    <script src="script.js" defer></script>
 </head>
 <body>
-    <nav>
-        <div class="upper-nav">
-            <img src="images/logo.png" alt="Logo" width="80" height="80">
-            <img src="images/lokalnyfachowiec_text.png" alt="Lokalny Fachowiec" width="250" height="80">
-            <button id="log-btn">Rejestracja/Logowanie</button>
-            <a class="site-nav-link" href="professionals.html">Mapa fachowców</a>
-            <a class="site-nav-link" href="history.html">Poznani fachowcy</a>
-            <a class="site-nav-link" href="calendar.html">Mój kalendarz</a>
-            <a class="site-nav-link" href="favorites.html">Ulubieni</a>
-        </div>
+    <nav class="upper-nav" aria-label="Nawigacja główna">
+        <img src="images/logo.png" alt="Logo" width="80" height="80">
+        <img src="images/lokalnyfachowiec_text.png" alt="Lokalny Fachowiec" width="250" height="80">
+        <button type="button" id="log-btn">Rejestracja/Logowanie</button>
+        <a class="site-nav-link" href="professionals.html">Mapa fachowców</a>
+        <a class="site-nav-link" href="history.html">Poznani fachowcy</a>
+        <a class="site-nav-link" href="calendar.html">Mój kalendarz</a>
+        <a class="site-nav-link" href="favorites.html">Ulubieni</a>
     </nav>
 
     <header class="tender-search-header">
         <label for="filter-keyword">Szukaj zlecenia:</label>
-        <input type="search" id="filter-keyword" placeholder="Wpisz nazwę lub opis zlecenia...">
+        <input
+            type="search"
+            id="filter-keyword"
+            placeholder="Wpisz nazwę lub opis zlecenia..."
+        >
         <div class="tender-sort-control">
             <label for="sort-rating">Sortowanie:</label>
             <select id="sort-rating">
@@ -39,72 +42,71 @@
     </header>
 
     <div class="content-layout">
-    <main>
-        <div id="tenders-container">
-            <p role="status">Ładowanie zleceń...</p>
-        </div>
-    </main>
+        <main>
+            <div id="tenders-container">
+                <p role="status">Ładowanie zleceń...</p>
+            </div>
+        </main>
 
-    <aside id="sidebar">
-        <h2>Filtry</h2>
-        <div class="filter-control">
-            <label for="filter-category">Kategoria:</label>
-            <select id="filter-category">
-                <option value="">Wszystkie</option>
-            </select>
-        </div>
-        <div class="filter-control">
-            <label for="filter-city">Lokalizacja:</label>
-            <select id="filter-city">
-                <option value="">Wszystkie miasta</option>
-            </select>
-        </div>
-        <div class="filter-control">
-            <label for="filter-status">Status:</label>
-            <select id="filter-status">
-                <option value="">Wszystkie</option>
-                <option value="aktywny">Aktywne</option>
-                <option value="zakończony">Zakończone</option>
-                <option value="zamknięty">Zamknięte</option>
-            </select>
-        </div>
-        <p>
-            <label for="filter-budget">Budżet maksymalny:</label>
-            <span id="budget-val">500 zł</span>
-        </p>
-        <input id="filter-budget" type="range" min="0" max="500" step="1" value="500">
+        <aside aria-labelledby="filters-heading">
+            <h2 id="filters-heading">Filtry</h2>
+            <div class="filter-control">
+                <label for="filter-category">Kategoria:</label>
+                <select id="filter-category">
+                    <option value="">Wszystkie</option>
+                </select>
+            </div>
+            <div class="filter-control">
+                <label for="filter-city">Lokalizacja:</label>
+                <select id="filter-city">
+                    <option value="">Wszystkie miasta</option>
+                </select>
+            </div>
+            <div class="filter-control">
+                <label for="filter-status">Status:</label>
+                <select id="filter-status">
+                    <option value="">Wszystkie</option>
+                    <option value="aktywny">Aktywne</option>
+                    <option value="zakończony">Zakończone</option>
+                    <option value="zamknięty">Zamknięte</option>
+                </select>
+            </div>
+            <p>
+                <label for="filter-budget">Budżet maksymalny:</label>
+                <span id="budget-val">500 zł</span>
+            </p>
+            <input id="filter-budget" type="range" min="0" max="500" step="1" value="500">
 
-        <div class="filter-control">
-            <label for="filter-rating-from">Ocena od:</label>
-            <select id="filter-rating-from">
-                <option value="0">Dowolna</option>
-                <option value="2">★ 2.0</option>
-                <option value="3">★ 3.0</option>
-                <option value="4">★ 4.0</option>
-                <option value="5">★ 5.0</option>
-            </select>
-        </div>
-        <div class="filter-control">
-            <label for="filter-rating-to">Ocena do:</label>
-            <select id="filter-rating-to">
-                <option value="5">★ 5.0</option>
-                <option value="4">★ 4.0</option>
-                <option value="3">★ 3.0</option>
-                <option value="2">★ 2.0</option>
-            </select>
-        </div>
-        <p>
-            <label for="filter-experience">Staż autora:</label>
-            <span id="experience-val">od 0 lat</span>
-        </p>
-        <input id="filter-experience" type="range" min="0" max="30" step="1" value="0">
-
-    </aside>
+            <div class="filter-control">
+                <label for="filter-rating-from">Ocena od:</label>
+                <select id="filter-rating-from">
+                    <option value="0">Dowolna</option>
+                    <option value="2">★ 2.0</option>
+                    <option value="3">★ 3.0</option>
+                    <option value="4">★ 4.0</option>
+                    <option value="5">★ 5.0</option>
+                </select>
+            </div>
+            <div class="filter-control">
+                <label for="filter-rating-to">Ocena do:</label>
+                <select id="filter-rating-to">
+                    <option value="5">★ 5.0</option>
+                    <option value="4">★ 4.0</option>
+                    <option value="3">★ 3.0</option>
+                    <option value="2">★ 2.0</option>
+                </select>
+            </div>
+            <p>
+                <label for="filter-experience">Staż autora:</label>
+                <span id="experience-val">od 0 lat</span>
+            </p>
+            <input id="filter-experience" type="range" min="0" max="30" step="1" value="0">
+        </aside>
     </div>
+
     <footer>
         <p>&copy; 2026 Lokalny Fachowiec. Wszelkie prawa zastrzeżone.</p>
-        <p>Autorzy: Ivan Mulitsa & Yevhenii Pustovoit</p>
+        <p>Autorzy: Ivan Mulitsa &amp; Yevhenii Pustovoit</p>
     </footer>
-
 </body>
 </html>

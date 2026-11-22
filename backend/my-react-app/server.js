@@ -17,15 +17,17 @@ dotenv.config({ path: resolve(appDirectory, '.env.local') });
 dotenv.config({ path: resolve(appDirectory, '.env') });
 
 const app = express();
-const allowedOrigins = (process.env.CORS_ORIGIN
-  || 'http://localhost:5173,http://localhost:5500,http://127.0.0.1:5500')
-  .split(',')
-  .map((origin) => origin.trim())
-  .filter(Boolean);
+const allowedOrigins = new Set([
+  'http://localhost:5173',
+  'http://localhost:5500',
+  'http://127.0.0.1:5500',
+  'https://mrpldev.github.io',
+  ...(process.env.CORS_ORIGIN || '').split(',').map((origin) => origin.trim()).filter(Boolean),
+]);
 
 app.use(cors({
   origin(origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
+    if (!origin || allowedOrigins.has(origin)) {
       callback(null, true);
       return;
     }
