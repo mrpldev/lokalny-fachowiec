@@ -360,19 +360,101 @@ app.delete('/api/favorites/:professionalId', authenticate, async (req, res) => {
 app.get('/api/me/history', authenticate, async (req, res) => {
   try {
     const [rows] = await db.execute(`
-      SELECT DISTINCT u.id, u.first_name AS firstName, u.last_name AS lastName,
+      SELECT u.id, u.first_name AS firstName, u.last_name AS lastName,
              u.role, u.city, u.description, u.avatar_url AS avatarUrl,
-             u.experience_years AS experienceYears
+             u.experience_years AS experienceYears,
+             r.id AS responseId, t.id AS tenderId, t.title AS tenderTitle,
+             EXISTS (
+               SELECT 1 FROM reviews rv
+               WHERE rv.response_id = r.id
+                 AND rv.reviewer_id = t.user_id
+                 AND rv.target_user_id = r.user_id
+             ) AS hasReview,
+             (
+               SELECT rv.rating FROM reviews rv
+               WHERE rv.response_id = r.id
+                 AND rv.reviewer_id = t.user_id
+                 AND rv.target_user_id = r.user_id
+               ORDER BY rv.id DESC
+               LIMIT 1
+             ) AS reviewRating
       FROM tenders t
       JOIN responses r ON r.tender_id = t.id AND r.status = 'zaakceptowany'
       JOIN users u ON u.id = r.user_id
       WHERE t.user_id = ?
-      ORDER BY u.last_name, u.first_name
+      ORDER BY u.last_name, u.first_name, t.created_at DESC
     `, [req.auth.userId]);
     return res.json(rows);
   } catch (error) {
     console.error('Błąd pobierania historii fachowców:', error);
     return res.status(500).json({ error: 'Nie udało się pobrać historii.' });
+  }
+});
+
+app.post('/api/me/history/:responseId/review', authenticate, async (req, res) => {
+  const responseId = Number(req.params.responseId);
+  const { rating, comment } = req.body || {};
+  const reviewComment = typeof comment === 'string' ? comment.trim() : null;
+
+  if (!Number.isSafeInteger(responseId) || responseId < 1) {
+    return res.status(400).json({ error: 'Nieprawidłowy identyfikator odpowiedzi.' });
+  }
+  if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
+    return res.status(400).json({ error: 'Ocena musi być liczbą całkowitą od 1 do 5.' });
+  }
+  if (comment != null && typeof comment !== 'string') {
+    return res.status(400).json({ error: 'Treść opinii musi być tekstem.' });
+  }
+  if (reviewComment && reviewComment.length > 5000) {
+    return res.status(400).json({ error: 'Opinia jest zbyt długa (maksymalnie 5000 znaków).' });
+  }
+
+  let connection;
+  try {
+    connection = await db.getConnection();
+    await connection.beginTransaction();
+    const [responses] = await connection.execute(`
+      SELECT r.user_id AS targetUserId
+      FROM responses r
+      JOIN tenders t ON t.id = r.tender_id
+      WHERE r.id = ? AND t.user_id = ? AND r.status = 'zaakceptowany'
+      FOR UPDATE
+    `, [responseId, req.auth.userId]);
+
+    if (!responses.length) {
+      await connection.rollback();
+      return res.status(404).json({ error: 'Nie znaleziono zaakceptowanej współpracy.' });
+    }
+
+    const targetUserId = responses[0].targetUserId;
+    if (String(targetUserId) === String(req.auth.userId)) {
+      await connection.rollback();
+      return res.status(400).json({ error: 'Nie można wystawić opinii samemu sobie.' });
+    }
+
+    const [existingReviews] = await connection.execute(
+      'SELECT id FROM reviews WHERE response_id = ? LIMIT 1 FOR UPDATE',
+      [responseId],
+    );
+    if (existingReviews.length) {
+      await connection.rollback();
+      return res.status(409).json({ error: 'Opinia do tej współpracy została już dodana.' });
+    }
+
+    await connection.execute(
+      `INSERT INTO reviews
+        (reviewer_id, target_user_id, response_id, rating, comment, is_verified)
+       VALUES (?, ?, ?, ?, ?, TRUE)`,
+      [req.auth.userId, targetUserId, responseId, rating, reviewComment || null],
+    );
+    await connection.commit();
+    return res.status(201).json({ message: 'Dziękujemy za dodanie opinii.' });
+  } catch (error) {
+    if (connection) await connection.rollback();
+    console.error('Błąd dodawania opinii:', error);
+    return res.status(500).json({ error: 'Nie udało się dodać opinii.' });
+  } finally {
+    if (connection) connection.release();
   }
 });
 

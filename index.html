@@ -17,7 +17,6 @@
         <div class="upper-nav">
             <img src="images/logo.png" alt="Logo" width="80" height="80">
             <img src="images/lokalnyfachowiec_text.png" alt="Lokalny Fachowiec" width="250" height="80">
-            <button id="calc-btn">Kalkulator Cen</button>
             <button id="log-btn">Rejestracja/Logowanie</button>
             <a class="site-nav-link" href="professionals.html">Mapa fachowców</a>
             <a class="site-nav-link" href="history.html">Poznani fachowcy</a>
@@ -26,9 +25,17 @@
         </div>
     </nav>
 
-    <header>
+    <header class="tender-search-header">
         <label for="filter-keyword">Szukaj zlecenia:</label>
         <input type="search" id="filter-keyword" placeholder="Wpisz nazwę lub opis zlecenia...">
+        <div class="tender-sort-control">
+            <label for="sort-rating">Sortowanie:</label>
+            <select id="sort-rating">
+                <option value="">Najnowsze</option>
+                <option value="desc">Ocena: najwyższa</option>
+                <option value="asc">Ocena: najniższa</option>
+            </select>
+        </div>
     </header>
 
     <div class="content-layout">
