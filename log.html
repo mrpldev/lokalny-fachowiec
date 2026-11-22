@@ -36,14 +36,34 @@
 		</form>
 
 		<form id="register-form" class="auth-form" hidden>
-			<label for="register-name">Imię i nazwisko:</label>
-			<input id="register-name" name="name" type="text" autocomplete="name" required>
+			<label for="register-first-name">Imię:</label>
+			<input id="register-first-name" name="firstName" type="text" autocomplete="given-name" maxlength="100" required>
+
+			<label for="register-last-name">Nazwisko:</label>
+			<input id="register-last-name" name="lastName" type="text" autocomplete="family-name" maxlength="100" required>
 
 			<label for="register-email">Adres e-mail:</label>
-			<input id="register-email" name="email" type="email" autocomplete="email" required>
+			<input id="register-email" name="email" type="email" autocomplete="email" maxlength="255" required>
 
-			<label for="register-password">Hasło (minimum 8 znaków):</label>
-			<input id="register-password" name="password" type="password" autocomplete="new-password" minlength="8" required>
+			<label for="register-phone">Numer telefonu:</label>
+			<input id="register-phone" name="phone" type="tel" autocomplete="tel" maxlength="50" required>
+
+			<label for="register-role">Typ konta:</label>
+			<select id="register-role" name="role" required>
+				<option value="">Wybierz typ konta</option>
+				<option value="majster">Majster</option>
+				<option value="brygada">Brygada</option>
+				<option value="firma">Firma</option>
+			</select>
+
+			<label for="register-city">Miasto:</label>
+			<input id="register-city" name="city" type="text" autocomplete="address-level2" maxlength="100">
+
+			<label for="register-description">Opis:</label>
+			<textarea id="register-description" name="description" rows="4" maxlength="65535"></textarea>
+
+			<label for="register-password">Hasło (od 8 do 128 znaków):</label>
+			<input id="register-password" name="password" type="password" autocomplete="new-password" minlength="8" maxlength="128" required>
 
 			<button type="submit">Utwórz konto</button>
 		</form>
@@ -61,6 +81,7 @@
 		const loginForm = document.getElementById('login-form');
 		const registerForm = document.getElementById('register-form');
 		const authMessage = document.getElementById('auth-message');
+		const apiUrl = 'https://lokalny-fachowiec-api.onrender.com';
 
 		function showForm(isLogin) {
 			loginForm.hidden = !isLogin;
@@ -75,11 +96,40 @@
 		loginTab.addEventListener('click', () => showForm(true));
 		registerTab.addEventListener('click', () => showForm(false));
 
-		[loginForm, registerForm].forEach((form) => {
-			form.addEventListener('submit', (event) => {
-				event.preventDefault();
-				authMessage.textContent = 'Logowanie i rejestracja wymagają podłączenia serwera.';
-			});
+		loginForm.addEventListener('submit', (event) => {
+			event.preventDefault();
+			authMessage.textContent = 'Logowanie nie jest jeszcze dostępne.';
+		});
+
+		registerForm.addEventListener('submit', async (event) => {
+			event.preventDefault();
+			authMessage.textContent = 'Tworzenie konta...';
+			const submitButton = registerForm.querySelector('button[type="submit"]');
+			submitButton.disabled = true;
+
+			const formData = new FormData(registerForm);
+			const payload = Object.fromEntries(formData.entries());
+
+			try {
+				const response = await fetch(`${apiUrl}/api/register`, {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify(payload),
+				});
+				const result = await response.json();
+
+				if (!response.ok) {
+					throw new Error(result.error || 'Nie udało się utworzyć konta.');
+				}
+
+				registerForm.reset();
+				showForm(true);
+				authMessage.textContent = 'Konto zostało utworzone. Możesz się zalogować.';
+			} catch (error) {
+				authMessage.textContent = error.message || 'Nie można połączyć się z serwerem.';
+			} finally {
+				submitButton.disabled = false;
+			}
 		});
 	</script>
 </body>
