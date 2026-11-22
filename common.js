@@ -50,6 +50,16 @@ window.app = (() => {
         return node;
     }
 
+    function reviewInteractionConfirmation(id, message) {
+        const label = element('label', '', 'review-confirmation');
+        const checkbox = element('input');
+        checkbox.id = id;
+        checkbox.type = 'checkbox';
+        checkbox.required = true;
+        label.append(checkbox, document.createTextNode(` ${message}`));
+        return { label, checkbox };
+    }
+
     function formatBudget(tender) {
         const amount = (value) => Number(value).toLocaleString('pl-PL');
         if (tender.budget_min != null && tender.budget_max != null) {
@@ -80,12 +90,13 @@ window.app = (() => {
         if (profile.experienceYears != null) {
             details.append(element('p', `Staż: ${profile.experienceYears} lat`));
         }
-        if (profile.averageRating != null) {
-            details.append(element(
-                'p',
-                `Ocena: ★ ${profile.averageRating} (${profile.reviewCount || 0} opinii)`,
-            ));
-        }
+        details.append(element(
+            'p',
+            profile.averageRating != null
+                ? `Ocena: ★ ${profile.averageRating} (${profile.reviewCount || 0} opinii)`
+                : 'Brak ocen',
+            'professional-rating',
+        ));
         if (profile.description) details.append(element('p', profile.description));
 
         if (profile.avatarUrl) {
@@ -137,6 +148,7 @@ window.app = (() => {
     return {
         api,
         element,
+        reviewInteractionConfirmation,
         formatBudget,
         formatDate,
         statusLabel: (status) => statusLabels[status] || status || 'Status nieznany',

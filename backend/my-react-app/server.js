@@ -359,6 +359,19 @@ app.delete('/api/favorites/:professionalId', authenticate, async (req, res) => {
   }
 });
 
+app.get('/api/me/reviews', authenticate, async (req, res) => {
+  try {
+    const [rows] = await db.execute(
+      'SELECT target_user_id AS targetUserId FROM reviews WHERE reviewer_id = ?',
+      [req.auth.userId],
+    );
+    return res.json(rows);
+  } catch (error) {
+    console.error('Błąd pobierania wystawionych opinii:', error);
+    return res.status(500).json({ error: 'Nie udało się pobrać wystawionych opinii.' });
+  }
+});
+
 app.get('/api/me/history', authenticate, async (req, res) => {
   try {
     const [rows] = await db.execute(`
@@ -368,14 +381,12 @@ app.get('/api/me/history', authenticate, async (req, res) => {
              r.id AS responseId, t.id AS tenderId, t.title AS tenderTitle,
              EXISTS (
                SELECT 1 FROM reviews rv
-               WHERE rv.response_id = r.id
-                 AND rv.reviewer_id = t.user_id
+               WHERE rv.reviewer_id = t.user_id
                  AND rv.target_user_id = r.user_id
              ) AS hasReview,
              (
                SELECT rv.rating FROM reviews rv
-               WHERE rv.response_id = r.id
-                 AND rv.reviewer_id = t.user_id
+               WHERE rv.reviewer_id = t.user_id
                  AND rv.target_user_id = r.user_id
                ORDER BY rv.id DESC
                LIMIT 1
@@ -393,13 +404,16 @@ app.get('/api/me/history', authenticate, async (req, res) => {
   }
 });
 
-app.post('/api/me/history/:responseId/review', authenticate, async (req, res) => {
-  const responseId = Number(req.params.responseId);
-  const { rating, comment } = req.body || {};
+app.post('/api/professionals/:professionalId/review', authenticate, async (req, res) => {
+  const professionalId = Number(req.params.professionalId);
+  const { rating, comment, hadInteraction } = req.body || {};
   const reviewComment = typeof comment === 'string' ? comment.trim() : null;
 
-  if (!Number.isSafeInteger(responseId) || responseId < 1) {
-    return res.status(400).json({ error: 'Nieprawidłowy identyfikator odpowiedzi.' });
+  if (!Number.isSafeInteger(professionalId) || professionalId < 1) {
+    return res.status(400).json({ error: 'Nieprawidłowy fachowiec.' });
+  }
+  if (hadInteraction !== true) {
+    return res.status(400).json({ error: 'Potwierdź, że miałeś/miałaś kontakt z tym fachowcem.' });
   }
   if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
     return res.status(400).json({ error: 'Ocena musi być liczbą całkowitą od 1 do 5.' });
@@ -415,42 +429,46 @@ app.post('/api/me/history/:responseId/review', authenticate, async (req, res) =>
   try {
     connection = await db.getConnection();
     await connection.beginTransaction();
-    const [responses] = await connection.execute(`
-      SELECT r.user_id AS targetUserId
-      FROM responses r
-      JOIN tenders t ON t.id = r.tender_id
-      WHERE r.id = ? AND t.user_id = ? AND r.status = 'zaakceptowany'
-      FOR UPDATE
-    `, [responseId, req.auth.userId]);
-
-    if (!responses.length) {
+    const [professionals] = await connection.execute(
+      'SELECT id FROM users WHERE id = ? FOR UPDATE',
+      [professionalId],
+    );
+    if (!professionals.length) {
       await connection.rollback();
-      return res.status(404).json({ error: 'Nie znaleziono zaakceptowanej współpracy.' });
+      return res.status(404).json({ error: 'Nie znaleziono fachowca.' });
     }
 
-    const targetUserId = responses[0].targetUserId;
-    if (String(targetUserId) === String(req.auth.userId)) {
+    if (String(professionalId) === String(req.auth.userId)) {
       await connection.rollback();
       return res.status(400).json({ error: 'Nie można wystawić opinii samemu sobie.' });
     }
 
     const [existingReviews] = await connection.execute(
-      'SELECT id FROM reviews WHERE response_id = ? LIMIT 1 FOR UPDATE',
-      [responseId],
+      'SELECT id FROM reviews WHERE reviewer_id = ? AND target_user_id = ? LIMIT 1 FOR UPDATE',
+      [req.auth.userId, professionalId],
     );
     if (existingReviews.length) {
       await connection.rollback();
-      return res.status(409).json({ error: 'Opinia do tej współpracy została już dodana.' });
+      return res.status(409).json({ error: 'Już oceniono tego fachowca.' });
     }
 
     await connection.execute(
       `INSERT INTO reviews
         (reviewer_id, target_user_id, response_id, rating, comment, is_verified)
-       VALUES (?, ?, ?, ?, ?, TRUE)`,
-      [req.auth.userId, targetUserId, responseId, rating, reviewComment || null],
+       VALUES (?, ?, NULL, ?, ?, FALSE)`,
+      [req.auth.userId, professionalId, rating, reviewComment || null],
+    );
+    const [stats] = await connection.execute(
+      `SELECT ROUND(AVG(rating), 1) AS averageRating, COUNT(rating) AS reviewCount
+       FROM reviews WHERE target_user_id = ?`,
+      [professionalId],
     );
     await connection.commit();
-    return res.status(201).json({ message: 'Dziękujemy za dodanie opinii.' });
+    return res.status(201).json({
+      message: 'Dziękujemy za opinię i potwierdzenie kontaktu.',
+      averageRating: stats[0].averageRating,
+      reviewCount: stats[0].reviewCount,
+    });
   } catch (error) {
     if (connection) await connection.rollback();
     console.error('Błąd dodawania opinii:', error);
@@ -553,6 +571,7 @@ app.get('/api/tenders/:id', async (req, res) => {
       SELECT t.id, t.title, t.description, t.category, t.status,
              t.budget_min, t.budget_max, t.city, t.created_at, t.expires_at,
              t.views_count, t.responses_count,
+             t.user_id AS author_id,
              u.first_name AS author_first_name,
              u.last_name AS author_last_name,
              u.experience_years AS author_experience_years,

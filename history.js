@@ -35,22 +35,30 @@ document.addEventListener('DOMContentLoaded', async () => {
         comment.maxLength = 5000;
         comment.rows = 3;
 
+        const interaction = app.reviewInteractionConfirmation(
+            `history-review-interaction-${work.responseId}`,
+            'Potwierdzam, że miałem/am kontakt z tym fachowcem.',
+        );
         const submit = app.element('button', 'Dodaj opinię');
         submit.type = 'submit';
         const feedback = app.element('p', '', 'review-status');
         feedback.setAttribute('role', 'status');
-        form.append(ratingLabel, rating, commentLabel, comment, submit, feedback);
+        form.append(ratingLabel, rating, commentLabel, comment, interaction.label, submit, feedback);
         form.addEventListener('submit', async (event) => {
             event.preventDefault();
             submit.disabled = true;
             feedback.textContent = 'Zapisywanie opinii...';
             try {
-                await app.api(`/api/me/history/${encodeURIComponent(work.responseId)}/review`, {
+                const result = await app.api(`/api/professionals/${encodeURIComponent(work.id)}/review`, {
                     method: 'POST',
-                    body: { rating: Number(rating.value), comment: comment.value },
+                    body: {
+                        rating: Number(rating.value),
+                        comment: comment.value,
+                        hadInteraction: interaction.checkbox.checked,
+                    },
                     token,
                 });
-                form.replaceWith(app.element('p', 'Dziękujemy za dodanie opinii.', 'review-status'));
+                form.replaceWith(app.element('p', result.message, 'review-status'));
             } catch (error) {
                 feedback.textContent = error.message;
                 submit.disabled = false;

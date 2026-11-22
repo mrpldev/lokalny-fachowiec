@@ -14,7 +14,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const controls = Object.values(fields);
     const list = $('tenders-container');
     let tenders = [];
-    let reviewableTenderIds = new Set();
 
     $('log-btn').addEventListener('click', () => { location.href = 'log.html'; });
     controls.forEach((control) => {
@@ -118,17 +117,6 @@ document.addEventListener('DOMContentLoaded', () => {
         link.append(image, content);
         const card = app.element('article', '', 'tender-card');
         card.append(link);
-
-        if (reviewableTenderIds.has(String(tender.id))) {
-            const button = app.element('button', 'Dodaj ocenę', 'tender-review-button');
-            button.type = 'button';
-            button.addEventListener('click', () => {
-                location.href = `history.html?tenderId=${encodeURIComponent(tender.id)}`;
-            });
-            const actions = app.element('div', '', 'tender-card-actions');
-            actions.append(button);
-            card.append(actions);
-        }
         return card;
     }
 
@@ -161,21 +149,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (isDefault) slider.value = String(limit);
     }
 
-    async function loadReviewableTenders() {
-        const token = app.token();
-        if (!token) return;
-        try {
-            const works = await app.api('/api/me/history', { token });
-            if (!Array.isArray(works)) throw new Error('API zwróciło nieprawidłową historię.');
-            reviewableTenderIds = new Set(
-                works.filter((work) => !Number(work.hasReview)).map((work) => String(work.tenderId)),
-            );
-            render();
-        } catch (error) {
-            console.error('Nie udało się pobrać zleceń możliwych do oceny:', error);
-        }
-    }
-
     async function loadTenders() {
         try {
             const data = await app.api('/api/tenders');
@@ -193,7 +166,6 @@ document.addEventListener('DOMContentLoaded', () => {
             );
             setBudgetLimit();
             render();
-            loadReviewableTenders();
         } catch (error) {
             list.replaceChildren(app.element(
                 'p',

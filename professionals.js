@@ -9,6 +9,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const token = app.token();
     let professionals = [];
     let favorites = new Set();
+    let reviewedProfessionalIds = new Set();
+    let currentUserId = null;
     const coordinatesByCity = new Map();
     let center = null;
     let map;
@@ -134,9 +136,92 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    function reviewForm(person, ratingSummary) {
+        const section = app.element('details', '', 'professional-review');
+        section.append(app.element('summary', 'Oceń fachowca'));
+
+        if (!token) {
+            const prompt = app.element('p', 'Zaloguj się, aby dodać ocenę.');
+            const link = app.element('a', ' Przejdź do logowania');
+            link.href = 'log.html';
+            prompt.append(link);
+            section.append(prompt);
+            return section;
+        }
+
+        if (currentUserId && currentUserId === String(person.id)) {
+            section.append(app.element('p', 'Nie możesz ocenić własnego profilu.'));
+            return section;
+        }
+
+        if (reviewedProfessionalIds.has(String(person.id))) {
+            section.append(app.element('p', 'Już oceniono tego fachowca.'));
+            return section;
+        }
+
+        const form = app.element('form', '', 'review-form');
+        const ratingId = `professional-rating-${person.id}`;
+        const ratingLabel = app.element('label', 'Ocena:');
+        ratingLabel.htmlFor = ratingId;
+        const rating = app.element('select');
+        rating.id = ratingId;
+        rating.required = true;
+        rating.append(new Option('Wybierz ocenę', ''));
+        for (let value = 5; value >= 1; value -= 1) {
+            rating.append(new Option(`${value} ★`, String(value)));
+        }
+
+        const commentId = `professional-comment-${person.id}`;
+        const commentLabel = app.element('label', 'Komentarz (opcjonalnie):');
+        commentLabel.htmlFor = commentId;
+        const comment = app.element('textarea');
+        comment.id = commentId;
+        comment.maxLength = 5000;
+        comment.rows = 3;
+
+        const interaction = app.reviewInteractionConfirmation(
+            `professional-review-interaction-${person.id}`,
+            'Potwierdzam, że miałem/am kontakt z tym fachowcem.',
+        );
+        const submit = app.element('button', 'Dodaj ocenę');
+        submit.type = 'submit';
+        const feedback = app.element('p', '', 'review-status');
+        feedback.setAttribute('role', 'status');
+        form.append(ratingLabel, rating, commentLabel, comment, interaction.label, submit, feedback);
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            submit.disabled = true;
+            feedback.textContent = 'Zapisywanie oceny...';
+            try {
+                const result = await app.api(
+                    `/api/professionals/${encodeURIComponent(person.id)}/review`,
+                    {
+                        method: 'POST',
+                        body: {
+                            rating: Number(rating.value),
+                            comment: comment.value,
+                            hadInteraction: interaction.checkbox.checked,
+                        },
+                        token,
+                    },
+                );
+                ratingSummary.textContent =
+                    `Ocena: ★ ${result.averageRating} (${result.reviewCount} opinii)`;
+                form.replaceWith(app.element('p', result.message, 'review-status'));
+            } catch (error) {
+                feedback.textContent = error.message;
+                submit.disabled = false;
+            }
+        });
+
+        section.append(form);
+        return section;
+    }
+
     function createCard(person) {
         const card = app.profileCard(person);
         const details = card.querySelector('.professional-details');
+        const ratingSummary = details.querySelector('.professional-rating');
         const actions = app.element('div', '', 'professional-actions');
         const favorite = app.element(
             'button',
@@ -158,6 +243,7 @@ document.addEventListener('DOMContentLoaded', () => {
         schedule.append(summary, content);
         actions.append(schedule);
         details.append(actions);
+        details.append(reviewForm(person, ratingSummary));
         return card;
     }
 
@@ -241,6 +327,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 .sort().forEach((city) => citySelect.add(new Option(city, city)));
 
             if (token) {
+                try {
+                    const me = await app.api('/api/me', { token });
+                    currentUserId = String(me.id);
+                } catch (error) {
+                    console.error('Nie udało się pobrać zalogowanego użytkownika:', error);
+                }
+                try {
+                    const reviews = await app.api('/api/me/reviews', { token });
+                    reviewedProfessionalIds = new Set(
+                        reviews.map((review) => String(review.targetUserId)),
+                    );
+                } catch (error) {
+                    console.error('Nie udało się pobrać wystawionych opinii:', error);
+                }
                 try {
                     const people = await app.api('/api/favorites', { token });
                     favorites = new Set(people.map((person) => String(person.id)));

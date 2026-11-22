@@ -311,6 +311,18 @@ main .tender-card {
     overflow-wrap: anywhere;
 }
 
+.tender-review-section {
+    margin: 32px 0;
+    padding: 20px;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    background: #fff;
+}
+
+.tender-review-section h2 {
+    margin: 0 0 16px;
+}
+
 .site-nav-link {
     display: inline-block;
     padding: 10px 14px;
@@ -442,6 +454,18 @@ main .tender-card {
     font-weight: 700;
 }
 
+.review-form .review-confirmation {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    font-weight: 400;
+}
+
+.review-confirmation input {
+    flex: 0 0 auto;
+    margin-top: 4px;
+}
+
 .review-form select,
 .review-form textarea {
     box-sizing: border-box;
@@ -475,6 +499,15 @@ main .tender-card {
     align-items: flex-start;
     gap: 10px;
     margin-top: 12px;
+}
+
+.professional-review {
+    margin-top: 12px;
+}
+
+.professional-review > summary {
+    cursor: pointer;
+    font-weight: 700;
 }
 
 .professional-schedule {
