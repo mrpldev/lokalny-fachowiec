@@ -188,7 +188,7 @@ main {
     font-family: "PT Sans Narrow", sans-serif;
 }
 
-main .professional-card {
+main .tender-card {
     box-sizing: border-box;
     width: 100%;
     margin: 16px 0;
@@ -201,59 +201,34 @@ main .professional-card {
     font-family: "PT Sans Narrow", sans-serif;
 }
 
-.professional-card {
+.tender-card {
     display: flex;
-    align-items: flex-start;
-    gap: 16px;
+    flex-direction: column;
+    gap: 6px;
 }
 
-.professional-avatar {
-    width: 88px;
-    height: 88px;
-    flex: 0 0 88px;
-    border-radius: 50%;
-    object-fit: cover;
-}
-
-.professional-details {
-    min-width: 0;
-}
-
-.professional-details h2 {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 8px;
+.tender-card h2 {
     margin: 0 0 8px;
     font-size: 23px;
 }
 
-.professional-meta,
-.professional-stats,
-.professional-description {
+.tender-meta,
+.tender-description,
+.tender-extra {
     margin: 6px 0;
     line-height: 1.45;
     overflow-wrap: anywhere;
 }
 
-.professional-stats {
+.tender-meta {
     font-weight: 700;
 }
 
-.verified-badge {
-    padding: 3px 8px;
-    border-radius: 999px;
-    background: #e8f5c2;
-    color: #426000;
-    font-size: 13px;
-    font-weight: 700;
-}
-
-.professionals-status {
+.tenders-status {
     margin: 8px 0;
 }
 
-.professionals-error {
+.tenders-error {
     color: #c62828;
 }
 
@@ -261,19 +236,9 @@ main .professional-card {
     .content-layout {
         grid-template-columns: 1fr;
     }
-
-    .professional-card {
-        gap: 12px;
-    }
-
-    .professional-avatar {
-        width: 64px;
-        height: 64px;
-        flex-basis: 64px;
-    }
 }
 
-div#professionals-container {
+div#tenders-container {
     display: flex;
     flex-direction: column;
     gap: 16px;

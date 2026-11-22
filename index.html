@@ -22,14 +22,14 @@
     </nav>
 
     <header>
-        <label for="filter-keyword">Szukaj fachowca:</label>
-        <input type="search" id="filter-keyword" placeholder="Wpisz szukanego fachowca...">
+        <label for="filter-keyword">Szukaj zlecenia:</label>
+        <input type="search" id="filter-keyword" placeholder="Wpisz nazwę lub opis zlecenia...">
     </header>
 
     <div class="content-layout">
     <main>
-        <div id="professionals-container">
-            <p role="status">Ładowanie profili fachowców...</p>
+        <div id="tenders-container">
+            <p role="status">Ładowanie zleceń...</p>
         </div>
     </main>
 
@@ -47,11 +47,20 @@
                 <option value="">Wszystkie miasta</option>
             </select>
         </div>
+        <div class="filter-control">
+            <label for="filter-status">Status:</label>
+            <select id="filter-status">
+                <option value="">Wszystkie</option>
+                <option value="aktywny">Aktywne</option>
+                <option value="zakończony">Zakończone</option>
+                <option value="zamknięty">Zamknięte</option>
+            </select>
+        </div>
         <p>
-            <label for="filter-price">Stawka maksymalna:</label>
-            <span id="price-val">500 zł</span>
+            <label for="filter-budget">Budżet maksymalny:</label>
+            <span id="budget-val">500 zł</span>
         </p>
-        <input id="filter-price" type="range" min="0" max="500" step="1" value="500">
+        <input id="filter-budget" type="range" min="0" max="500" step="1" value="500">
 
         <div class="filter-control">
             <label for="filter-rating-from">Ocena od:</label>
@@ -63,7 +72,6 @@
                 <option value="5">★ 5.0</option>
             </select>
         </div>
-
         <div class="filter-control">
             <label for="filter-rating-to">Ocena do:</label>
             <select id="filter-rating-to">
@@ -73,12 +81,10 @@
                 <option value="2">★ 2.0</option>
             </select>
         </div>
-
         <p>
-            <label for="filter-experience">Staż:</label>
+            <label for="filter-experience">Staż autora:</label>
             <span id="experience-val">od 0 lat</span>
         </p>
-
         <input id="filter-experience" type="range" min="0" max="30" step="1" value="0">
 
     </aside>
