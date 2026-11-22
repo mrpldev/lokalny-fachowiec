@@ -128,6 +128,13 @@ aside h2 {
     font-size: 26px;
 }
 
+aside .filter-control {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin: 18px 0;
+}
+
 aside p {
     display: flex;
     justify-content: space-between;
@@ -194,9 +201,75 @@ main .professional-card {
     font-family: "PT Sans Narrow", sans-serif;
 }
 
+.professional-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+}
+
+.professional-avatar {
+    width: 88px;
+    height: 88px;
+    flex: 0 0 88px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.professional-details {
+    min-width: 0;
+}
+
+.professional-details h2 {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0 0 8px;
+    font-size: 23px;
+}
+
+.professional-meta,
+.professional-stats,
+.professional-description {
+    margin: 6px 0;
+    line-height: 1.45;
+    overflow-wrap: anywhere;
+}
+
+.professional-stats {
+    font-weight: 700;
+}
+
+.verified-badge {
+    padding: 3px 8px;
+    border-radius: 999px;
+    background: #e8f5c2;
+    color: #426000;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.professionals-status {
+    margin: 8px 0;
+}
+
+.professionals-error {
+    color: #c62828;
+}
+
 @media (max-width: 700px) {
     .content-layout {
         grid-template-columns: 1fr;
+    }
+
+    .professional-card {
+        gap: 12px;
+    }
+
+    .professional-avatar {
+        width: 64px;
+        height: 64px;
+        flex-basis: 64px;
     }
 }
 

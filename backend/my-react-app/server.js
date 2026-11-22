@@ -45,6 +45,7 @@ const db = mysql.createPool({
 
 const scrypt = promisify(scryptCallback);
 const allowedRoles = new Set(['majster', 'brygada', 'firma']);
+const allowedCategories = new Set(['elektryk', 'hydraulik', 'stolarz']);
 const dummySalt = '0123456789abcdef0123456789abcdef';
 
 async function hashPassword(password) {
@@ -74,11 +75,26 @@ app.post('/api/register', async (req, res) => {
     firstName,
     lastName,
     role,
+    category,
+    hourlyRate,
+    experienceYears,
     city,
     description,
   } = req.body || {};
 
-  const values = { email, phone, password, firstName, lastName, role, city, description };
+  const values = {
+    email,
+    phone,
+    password,
+    firstName,
+    lastName,
+    role,
+    category,
+    hourlyRate,
+    experienceYears,
+    city,
+    description,
+  };
   for (const [field, value] of Object.entries(values)) {
     if (value !== undefined && typeof value !== 'string') {
       return res.status(400).json({ error: `Nieprawidłowa wartość pola: ${field}` });
@@ -90,8 +106,11 @@ app.post('/api/register', async (req, res) => {
   const normalizedFirstName = firstName?.trim();
   const normalizedLastName = lastName?.trim();
   const normalizedRole = role?.trim();
+  const normalizedCategory = category?.trim().toLowerCase();
   const normalizedCity = city?.trim() || null;
   const normalizedDescription = description?.trim() || null;
+  const parsedHourlyRate = Number(hourlyRate);
+  const parsedExperienceYears = Number(experienceYears);
 
   if (!normalizedEmail || normalizedEmail.length > 255
       || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
@@ -110,6 +129,17 @@ app.post('/api/register', async (req, res) => {
   if (!allowedRoles.has(normalizedRole)) {
     return res.status(400).json({ error: 'Wybierz prawidłowy typ konta.' });
   }
+  if (!allowedCategories.has(normalizedCategory)) {
+    return res.status(400).json({ error: 'Wybierz prawidłową kategorię fachowca.' });
+  }
+  if (!/^\d+(\.\d{1,2})?$/.test(hourlyRate || '')
+      || parsedHourlyRate > 99999999.99) {
+    return res.status(400).json({ error: 'Podaj prawidłową stawkę godzinową.' });
+  }
+  if (!/^\d+$/.test(experienceYears || '')
+      || parsedExperienceYears > 80) {
+    return res.status(400).json({ error: 'Staż musi być liczbą całkowitą od 0 do 80 lat.' });
+  }
   if ((normalizedCity && normalizedCity.length > 100)
       || (normalizedDescription && Buffer.byteLength(normalizedDescription, 'utf8') > 65535)) {
     return res.status(400).json({ error: 'Miasto lub opis są zbyt długie.' });
@@ -119,8 +149,9 @@ app.post('/api/register', async (req, res) => {
     const passwordHash = await hashPassword(password);
     const [result] = await db.execute(
       `INSERT INTO users
-        (email, phone, password_hash, first_name, last_name, role, city, registered_at, description)
-       VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_DATE, ?)`,
+        (email, phone, password_hash, first_name, last_name, role, category,
+         hourly_rate, experience_years, city, registered_at, description)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_DATE, ?)`,
       [
         normalizedEmail,
         normalizedPhone,
@@ -128,6 +159,9 @@ app.post('/api/register', async (req, res) => {
         normalizedFirstName,
         normalizedLastName,
         normalizedRole,
+        normalizedCategory,
+        parsedHourlyRate,
+        parsedExperienceYears,
         normalizedCity,
         normalizedDescription,
       ],
@@ -141,6 +175,9 @@ app.post('/api/register', async (req, res) => {
         firstName: normalizedFirstName,
         lastName: normalizedLastName,
         role: normalizedRole,
+        category: normalizedCategory,
+        hourlyRate: parsedHourlyRate,
+        experienceYears: parsedExperienceYears,
       },
     });
   } catch (error) {
@@ -188,6 +225,39 @@ app.post('/api/login', async (req, res) => {
   } catch (error) {
     console.error('Błąd logowania użytkownika:', error);
     return res.status(500).json({ error: 'Nie udało się zalogować.' });
+  }
+});
+
+app.get('/api/professionals', async (req, res) => {
+  try {
+    const [rows] = await db.query(`
+      SELECT
+        u.id,
+        u.first_name AS firstName,
+        u.last_name AS lastName,
+        u.role,
+        u.category,
+        u.hourly_rate AS hourlyRate,
+        u.experience_years AS experienceYears,
+        u.city,
+        u.description,
+        u.avatar_url AS avatarUrl,
+        u.is_verified AS isVerified,
+        review_stats.average_rating AS averageRating,
+        COALESCE(review_stats.review_count, 0) AS reviewCount
+      FROM users u
+      LEFT JOIN (
+        SELECT target_user_id, ROUND(AVG(rating), 1) AS average_rating,
+               COUNT(*) AS review_count
+        FROM reviews
+        GROUP BY target_user_id
+      ) AS review_stats ON review_stats.target_user_id = u.id
+      ORDER BY u.registered_at DESC, u.id DESC
+    `);
+    res.json(rows);
+  } catch (error) {
+    console.error('Błąd pobierania profili fachowców:', error);
+    res.status(500).json({ error: 'Nie udało się pobrać profili fachowców.' });
   }
 });
 

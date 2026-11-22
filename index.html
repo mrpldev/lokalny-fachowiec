@@ -23,58 +23,56 @@
 
     <header>
         <label for="filter-keyword">Szukaj fachowca:</label>
-        <input type="text" id="filter-keyword" placeholder="Wpisz szukanego fachowca...">
+        <input type="search" id="filter-keyword" placeholder="Wpisz szukanego fachowca...">
     </header>
 
     <div class="content-layout">
     <main>
         <div id="professionals-container">
-            <p>Tutaj będą profile fachowców</p>
+            <p role="status">Ładowanie profili fachowców...</p>
         </div>
     </main>
 
     <aside id="sidebar">
         <h2>Filtry</h2>
-        <p><label for="filter-category">Kategoria:</label>
-        <select id="filter-category">
-            <option value="">Wszystkie</option>
-            <option value="elektryk">Elektryk</option>
-            <option value="hydraulik">Hydraulik</option>
-            <option value="stolarz">Stolarz</option>
-
-        </select>
-                <p><label for="filter-category">Lokalizacja:</label>
-        <select id="filter-category">
-            <option value="">Gdańsk</option>
-            <option value="elektryk">Warszawa</option>
-            <option value="hydraulik">Kraków</option>
-            <option value="stolarz">Wrocław</option>
-
-        </select>
+        <div class="filter-control">
+            <label for="filter-category">Kategoria:</label>
+            <select id="filter-category">
+                <option value="">Wszystkie</option>
+            </select>
+        </div>
+        <div class="filter-control">
+            <label for="filter-city">Lokalizacja:</label>
+            <select id="filter-city">
+                <option value="">Wszystkie miasta</option>
+            </select>
+        </div>
         <p>
-            <label for="filter-price">Stawka za godzinę:</label>
-            <span id="price-val">250 zł</span>
+            <label for="filter-price">Stawka maksymalna:</label>
+            <span id="price-val">500 zł</span>
         </p>
-        <input id="filter-price" type="range" min="0" max="500" step="1" value="250">
+        <input id="filter-price" type="range" min="0" max="500" step="1" value="500">
 
-        <p><label for="filter-rating-from">Ocena od:</label></p>
+        <div class="filter-control">
+            <label for="filter-rating-from">Ocena od:</label>
+            <select id="filter-rating-from">
+                <option value="0">Dowolna</option>
+                <option value="2">★ 2.0</option>
+                <option value="3">★ 3.0</option>
+                <option value="4">★ 4.0</option>
+                <option value="5">★ 5.0</option>
+            </select>
+        </div>
 
-        <select id="filter-rating-from">
-            <option value="0">Dowolna</option>
-            <option value="2">★ 2.0</option>
-            <option value="3">★ 3.0</option>
-            <option value="4">★ 4.0</option>
-            <option value="5">★ 5.0</option>
-        </select>
-
-        <p><label for="filter-rating-to">Ocena do:</label></p>
-
-        <select id="filter-rating-to">
-            <option value="5">★ 5.0</option>
-            <option value="4">★ 4.0</option>
-            <option value="3">★ 3.0</option>
-            <option value="2">★ 2.0</option>
-        </select>
+        <div class="filter-control">
+            <label for="filter-rating-to">Ocena do:</label>
+            <select id="filter-rating-to">
+                <option value="5">★ 5.0</option>
+                <option value="4">★ 4.0</option>
+                <option value="3">★ 3.0</option>
+                <option value="2">★ 2.0</option>
+            </select>
+        </div>
 
         <p>
             <label for="filter-experience">Staż:</label>
