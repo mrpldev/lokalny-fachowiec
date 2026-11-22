@@ -3,6 +3,7 @@ import express from 'express';
 import cors from 'cors';
 import mysql from 'mysql2/promise';
 import {
+  createHash,
   randomBytes,
   scrypt as scryptCallback,
   timingSafeEqual,
@@ -64,6 +65,33 @@ async function verifyPassword(password, passwordHash) {
   const storedKey = Buffer.from(storedKeyHex, 'hex');
   const derivedKey = await scrypt(password, salt, storedKey.length);
   return timingSafeEqual(derivedKey, storedKey);
+}
+
+async function authenticate(req, res, next) {
+  const authorization = req.get('authorization') || '';
+  const tokenMatch = /^Bearer ([a-f\d]{64})$/i.exec(authorization);
+  if (!tokenMatch) {
+    return res.status(401).json({ error: 'Zaloguj się, aby kontynuować.' });
+  }
+
+  const tokenHash = createHash('sha256').update(tokenMatch[1]).digest('hex');
+  try {
+    const [rows] = await db.execute(
+      `SELECT user_id FROM sessions
+       WHERE token_hash = ? AND expires_at > CURRENT_TIMESTAMP
+       LIMIT 1`,
+      [tokenHash],
+    );
+    if (!rows.length) {
+      return res.status(401).json({ error: 'Sesja wygasła. Zaloguj się ponownie.' });
+    }
+
+    req.auth = { userId: rows[0].user_id, tokenHash };
+    return next();
+  } catch (error) {
+    console.error('Błąd weryfikacji sesji:', error);
+    return res.status(500).json({ error: 'Nie udało się zweryfikować sesji.' });
+  }
 }
 
 app.post('/api/register', async (req, res) => {
@@ -192,8 +220,18 @@ app.post('/api/login', async (req, res) => {
       return res.status(401).json({ error: 'Nieprawidłowy e-mail lub hasło.' });
     }
 
+    const token = randomBytes(32).toString('hex');
+    const tokenHash = createHash('sha256').update(token).digest('hex');
+    await db.execute('DELETE FROM sessions WHERE expires_at <= CURRENT_TIMESTAMP');
+    await db.execute(
+      `INSERT INTO sessions (user_id, token_hash, expires_at)
+       VALUES (?, ?, DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 30 DAY))`,
+      [user.id, tokenHash],
+    );
+
     return res.json({
       message: 'Zalogowano pomyślnie.',
+      token,
       user: {
         id: user.id,
         email: user.email,
@@ -205,6 +243,210 @@ app.post('/api/login', async (req, res) => {
   } catch (error) {
     console.error('Błąd logowania użytkownika:', error);
     return res.status(500).json({ error: 'Nie udało się zalogować.' });
+  }
+});
+
+app.post('/api/logout', authenticate, async (req, res) => {
+  try {
+    await db.execute('DELETE FROM sessions WHERE token_hash = ?', [req.auth.tokenHash]);
+    return res.json({ message: 'Wylogowano.' });
+  } catch (error) {
+    console.error('Błąd wylogowania:', error);
+    return res.status(500).json({ error: 'Nie udało się wylogować.' });
+  }
+});
+
+app.get('/api/me', authenticate, async (req, res) => {
+  try {
+    const [rows] = await db.execute(
+      `SELECT id, first_name AS firstName, last_name AS lastName, role
+       FROM users WHERE id = ? LIMIT 1`,
+      [req.auth.userId],
+    );
+    if (!rows.length) return res.status(404).json({ error: 'Nie znaleziono użytkownika.' });
+    return res.json(rows[0]);
+  } catch (error) {
+    console.error('Błąd pobierania profilu użytkownika:', error);
+    return res.status(500).json({ error: 'Nie udało się pobrać profilu.' });
+  }
+});
+
+app.get('/api/professionals', async (req, res) => {
+  try {
+    const [rows] = await db.query(`
+      SELECT u.id, u.first_name AS firstName, u.last_name AS lastName,
+             u.role, u.city, u.description, u.avatar_url AS avatarUrl,
+             u.experience_years AS experienceYears, u.is_verified AS isVerified,
+             review_stats.average_rating AS averageRating,
+             COALESCE(review_stats.review_count, 0) AS reviewCount
+      FROM users u
+      LEFT JOIN (
+        SELECT target_user_id, ROUND(AVG(rating), 1) AS average_rating,
+               COUNT(rating) AS review_count
+        FROM reviews
+        GROUP BY target_user_id
+      ) AS review_stats ON review_stats.target_user_id = u.id
+      WHERE u.city IS NOT NULL AND u.city <> ''
+      ORDER BY u.registered_at DESC, u.id DESC
+    `);
+    return res.json(rows);
+  } catch (error) {
+    console.error('Błąd pobierania fachowców:', error);
+    return res.status(500).json({ error: 'Nie udało się pobrać fachowców.' });
+  }
+});
+
+app.get('/api/favorites', authenticate, async (req, res) => {
+  try {
+    const [rows] = await db.execute(`
+      SELECT u.id, u.first_name AS firstName, u.last_name AS lastName,
+             u.role, u.city, u.description, u.avatar_url AS avatarUrl,
+             u.experience_years AS experienceYears
+      FROM favorites f
+      JOIN users u ON u.id = f.professional_id
+      WHERE f.user_id = ?
+      ORDER BY f.created_at DESC
+    `, [req.auth.userId]);
+    return res.json(rows);
+  } catch (error) {
+    console.error('Błąd pobierania ulubionych fachowców:', error);
+    return res.status(500).json({ error: 'Nie udało się pobrać ulubionych.' });
+  }
+});
+
+app.post('/api/favorites/:professionalId', authenticate, async (req, res) => {
+  const professionalId = Number(req.params.professionalId);
+  if (!Number.isSafeInteger(professionalId) || professionalId < 1
+      || String(professionalId) === String(req.auth.userId)) {
+    return res.status(400).json({ error: 'Nieprawidłowy fachowiec.' });
+  }
+
+  try {
+    const [users] = await db.execute('SELECT id FROM users WHERE id = ? LIMIT 1', [professionalId]);
+    if (!users.length) return res.status(404).json({ error: 'Nie znaleziono fachowca.' });
+
+    await db.execute(
+      'INSERT IGNORE INTO favorites (user_id, professional_id) VALUES (?, ?)',
+      [req.auth.userId, professionalId],
+    );
+    return res.status(200).json({ message: 'Dodano do ulubionych.' });
+  } catch (error) {
+    if (error.code === 'ER_NO_REFERENCED_ROW_2') {
+      return res.status(404).json({ error: 'Nie znaleziono fachowca.' });
+    }
+    console.error('Błąd dodawania ulubionego fachowca:', error);
+    return res.status(500).json({ error: 'Nie udało się dodać do ulubionych.' });
+  }
+});
+
+app.delete('/api/favorites/:professionalId', authenticate, async (req, res) => {
+  const professionalId = Number(req.params.professionalId);
+  if (!Number.isSafeInteger(professionalId) || professionalId < 1) {
+    return res.status(400).json({ error: 'Nieprawidłowy fachowiec.' });
+  }
+
+  try {
+    await db.execute(
+      'DELETE FROM favorites WHERE user_id = ? AND professional_id = ?',
+      [req.auth.userId, professionalId],
+    );
+    return res.json({ message: 'Usunięto z ulubionych.' });
+  } catch (error) {
+    console.error('Błąd usuwania ulubionego fachowca:', error);
+    return res.status(500).json({ error: 'Nie udało się usunąć z ulubionych.' });
+  }
+});
+
+app.get('/api/me/history', authenticate, async (req, res) => {
+  try {
+    const [rows] = await db.execute(`
+      SELECT DISTINCT u.id, u.first_name AS firstName, u.last_name AS lastName,
+             u.role, u.city, u.description, u.avatar_url AS avatarUrl,
+             u.experience_years AS experienceYears
+      FROM tenders t
+      JOIN responses r ON r.tender_id = t.id AND r.status = 'zaakceptowany'
+      JOIN users u ON u.id = r.user_id
+      WHERE t.user_id = ?
+      ORDER BY u.last_name, u.first_name
+    `, [req.auth.userId]);
+    return res.json(rows);
+  } catch (error) {
+    console.error('Błąd pobierania historii fachowców:', error);
+    return res.status(500).json({ error: 'Nie udało się pobrać historii.' });
+  }
+});
+
+app.get('/api/me/availability', authenticate, async (req, res) => {
+  try {
+    const [rows] = await db.execute(
+      `SELECT weekday, start_time AS startTime, end_time AS endTime
+       FROM weekly_availability WHERE user_id = ? ORDER BY weekday`,
+      [req.auth.userId],
+    );
+    return res.json(rows);
+  } catch (error) {
+    console.error('Błąd pobierania dostępności:', error);
+    return res.status(500).json({ error: 'Nie udało się pobrać dostępności.' });
+  }
+});
+
+app.put('/api/me/availability', authenticate, async (req, res) => {
+  const { slots } = req.body || {};
+  if (!Array.isArray(slots) || slots.length > 7) {
+    return res.status(400).json({ error: 'Podaj dostępność od 0 do 7 dni.' });
+  }
+
+  const seenDays = new Set();
+  for (const slot of slots) {
+    if (!slot || !Number.isInteger(slot.weekday) || slot.weekday < 1 || slot.weekday > 7
+        || seenDays.has(slot.weekday)
+        || !/^([01]\d|2[0-3]):[0-5]\d$/.test(slot.startTime)
+        || !/^([01]\d|2[0-3]):[0-5]\d$/.test(slot.endTime)
+        || slot.startTime >= slot.endTime) {
+      return res.status(400).json({ error: 'Sprawdź dzień oraz godziny dostępności.' });
+    }
+    seenDays.add(slot.weekday);
+  }
+
+  let connection;
+  try {
+    connection = await db.getConnection();
+    await connection.beginTransaction();
+    await connection.execute('DELETE FROM weekly_availability WHERE user_id = ?', [req.auth.userId]);
+    for (const slot of slots) {
+      await connection.execute(
+        `INSERT INTO weekly_availability (user_id, weekday, start_time, end_time)
+         VALUES (?, ?, ?, ?)`,
+        [req.auth.userId, slot.weekday, slot.startTime, slot.endTime],
+      );
+    }
+    await connection.commit();
+    return res.json({ message: 'Zapisano dostępność.', slots });
+  } catch (error) {
+    if (connection) await connection.rollback();
+    console.error('Błąd zapisywania dostępności:', error);
+    return res.status(500).json({ error: 'Nie udało się zapisać dostępności.' });
+  } finally {
+    if (connection) connection.release();
+  }
+});
+
+app.get('/api/professionals/:id/availability', async (req, res) => {
+  const professionalId = Number(req.params.id);
+  if (!Number.isSafeInteger(professionalId) || professionalId < 1) {
+    return res.status(400).json({ error: 'Nieprawidłowy fachowiec.' });
+  }
+
+  try {
+    const [rows] = await db.execute(
+      `SELECT weekday, start_time AS startTime, end_time AS endTime
+       FROM weekly_availability WHERE user_id = ? ORDER BY weekday`,
+      [professionalId],
+    );
+    return res.json(rows);
+  } catch (error) {
+    console.error('Błąd pobierania terminów fachowca:', error);
+    return res.status(500).json({ error: 'Nie udało się pobrać terminów.' });
   }
 });
 

@@ -1,0 +1,277 @@
+document.addEventListener('DOMContentLoaded', () => {
+    const $ = (id) => document.getElementById(id);
+    const search = $('professional-search');
+    const citySelect = $('professional-city');
+    const radius = $('search-radius');
+    const radiusValue = $('search-radius-value');
+    const status = $('professionals-status');
+    const list = $('professionals-list');
+    const token = app.token();
+    let professionals = [];
+    let favorites = new Set();
+    const coordinatesByCity = new Map();
+    let center = null;
+    let map;
+    let layers;
+
+    if (window.L) {
+        map = L.map('professionals-map').setView([52.1, 19.2], 6);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; OpenStreetMap contributors',
+        }).addTo(map);
+        layers = L.layerGroup().addTo(map);
+    } else {
+        status.textContent = 'Nie udało się załadować mapy. Sprawdź połączenie z internetem.';
+    }
+
+    function normalize(value) {
+        return String(value || '').normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('pl-PL');
+    }
+
+    function distanceKm(first, second) {
+        const radians = (degrees) => degrees * Math.PI / 180;
+        const lat = radians(second.latitude - first.latitude);
+        const lon = radians(second.longitude - first.longitude);
+        const a = Math.sin(lat / 2) ** 2
+            + Math.cos(radians(first.latitude)) * Math.cos(radians(second.latitude))
+            * Math.sin(lon / 2) ** 2;
+        return 6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    }
+
+    async function geocode(city) {
+        const key = `lf-city-coordinates:${normalize(city)}`;
+        try {
+            const cached = localStorage.getItem(key);
+            if (cached) return JSON.parse(cached);
+        } catch {
+            status.textContent = 'Nie można odczytać pamięci lokalizacji.';
+        }
+
+        const query = new URLSearchParams({
+            name: city, countryCode: 'PL', count: '1', language: 'pl', format: 'json',
+        });
+        const response = await fetch(`https://geocoding-api.open-meteo.com/v1/search?${query}`);
+        if (!response.ok) return null;
+        const match = (await response.json()).results?.[0];
+        if (!match) return null;
+        const point = { latitude: Number(match.latitude), longitude: Number(match.longitude) };
+        try {
+            localStorage.setItem(key, JSON.stringify(point));
+        } catch {
+            status.textContent = 'Nie można zapisać pamięci lokalizacji.';
+        }
+        return point;
+    }
+
+    async function loadCoordinates() {
+        const cities = [...new Set(professionals.map((person) => person.city).filter(Boolean))];
+        for (const city of cities) {
+            try {
+                const point = await geocode(city);
+                if (point) coordinatesByCity.set(city, point);
+            } catch (error) {
+                console.error(`Nie udało się ustalić położenia miasta ${city}:`, error);
+            }
+        }
+    }
+
+    function visibleProfessionals() {
+        const keyword = normalize(search.value.trim());
+        const maxDistance = Number(radius.value);
+        return professionals.filter((person) => {
+            const searchable = normalize([
+                person.firstName, person.lastName, person.role, person.city, person.description,
+            ].join(' '));
+            if (keyword && !searchable.includes(keyword)) return false;
+            if (center) {
+                const point = coordinatesByCity.get(person.city);
+                if (!point || distanceKm(center, point) > maxDistance) return false;
+            }
+            return true;
+        });
+    }
+
+    async function loadAvailability(id, container) {
+        container.textContent = 'Ładowanie terminów...';
+        try {
+            const slots = await app.api(`/api/professionals/${encodeURIComponent(id)}/availability`);
+            const upcoming = app.upcomingSlots(slots);
+            container.replaceChildren();
+            if (!upcoming.length) {
+                container.append(app.element('p', 'Brak dostępnych terminów w najbliższych 14 dniach.'));
+                return;
+            }
+            const items = app.element('ul');
+            upcoming.forEach((value) => items.append(app.element('li', value)));
+            container.append(items);
+        } catch (error) {
+            container.textContent = error.message || 'Nie udało się pobrać terminów.';
+        }
+    }
+
+    async function toggleFavorite(person, button) {
+        if (!token) {
+            location.href = 'log.html';
+            return;
+        }
+        const id = String(person.id);
+        const isFavorite = favorites.has(id);
+        button.disabled = true;
+        try {
+            await app.api(`/api/favorites/${encodeURIComponent(person.id)}`, {
+                method: isFavorite ? 'DELETE' : 'POST',
+                token,
+            });
+            if (isFavorite) favorites.delete(id);
+            else favorites.add(id);
+            button.textContent = isFavorite ? '☆ Dodaj do ulubionych' : '★ Usuń z ulubionych';
+        } catch (error) {
+            status.textContent = error.message;
+        } finally {
+            button.disabled = false;
+        }
+    }
+
+    function createCard(person) {
+        const card = app.profileCard(person);
+        const details = card.querySelector('.professional-details');
+        const actions = app.element('div', '', 'professional-actions');
+        const favorite = app.element(
+            'button',
+            token && favorites.has(String(person.id)) ? '★ Usuń z ulubionych' : '☆ Dodaj do ulubionych',
+        );
+        favorite.type = 'button';
+        favorite.addEventListener('click', () => toggleFavorite(person, favorite));
+        actions.append(favorite);
+
+        const schedule = app.element('details', '', 'professional-schedule');
+        const summary = app.element('summary', 'Dostępne terminy');
+        const content = app.element('div');
+        summary.addEventListener('click', () => {
+            if (!schedule.open && !schedule.dataset.loaded) {
+                schedule.dataset.loaded = 'true';
+                loadAvailability(person.id, content);
+            }
+        });
+        schedule.append(summary, content);
+        actions.append(schedule);
+        details.append(actions);
+        return card;
+    }
+
+    function renderMap(people) {
+        if (!map || !layers) return;
+        layers.clearLayers();
+        const groups = new Map();
+        people.forEach((person) => {
+            const point = coordinatesByCity.get(person.city);
+            if (!point) return;
+            const group = groups.get(person.city) || { point, people: [] };
+            group.people.push(person);
+            groups.set(person.city, group);
+        });
+
+        const points = [];
+        groups.forEach((group, city) => {
+            const point = [group.point.latitude, group.point.longitude];
+            points.push(point);
+            const marker = L.circleMarker(point, {
+                radius: Math.min(8 + group.people.length, 18),
+                color: '#426000',
+                fillColor: '#bdd10b',
+                fillOpacity: 0.8,
+            });
+            const popup = app.element('div');
+            popup.append(app.element('strong', `${city} (${group.people.length})`));
+            group.people.forEach((person) => popup.append(app.element(
+                'p',
+                `${person.firstName || ''} ${person.lastName || ''}`.trim() || 'Fachowiec',
+            )));
+            marker.bindPopup(popup).addTo(layers);
+        });
+
+        if (center) {
+            L.circle([center.latitude, center.longitude], {
+                radius: Number(radius.value) * 1000,
+                color: '#849500',
+                fillOpacity: 0.08,
+            }).addTo(layers);
+        } else if (points.length) {
+            map.fitBounds(points, { padding: [24, 24], maxZoom: 10 });
+        }
+    }
+
+    function render() {
+        const people = visibleProfessionals();
+        list.replaceChildren(...(people.length
+            ? people.map(createCard)
+            : [app.element('p', 'Brak fachowców spełniających wybrane kryteria.')]));
+        renderMap(people);
+        status.textContent = people.some((person) => !coordinatesByCity.has(person.city))
+            ? 'Nie udało się ustalić położenia niektórych miast; ich profile nadal są na liście.'
+            : `${people.length} fachowców w wynikach.`;
+    }
+
+    async function locateUser() {
+        if (!navigator.geolocation) {
+            status.textContent = 'Ta przeglądarka nie obsługuje lokalizacji.';
+            return;
+        }
+        navigator.geolocation.getCurrentPosition(
+            ({ coords }) => {
+                center = { latitude: coords.latitude, longitude: coords.longitude };
+                citySelect.value = '';
+                map?.setView([center.latitude, center.longitude], 10);
+                render();
+            },
+            () => {
+                status.textContent = 'Nie udało się pobrać lokalizacji. Sprawdź uprawnienia przeglądarki.';
+            },
+        );
+    }
+
+    async function load() {
+        try {
+            professionals = await app.api('/api/professionals');
+            if (!Array.isArray(professionals)) throw new Error('API zwróciło nieprawidłową listę fachowców.');
+            citySelect.replaceChildren(new Option('Cała Polska', ''));
+            [...new Set(professionals.map((person) => person.city).filter(Boolean))]
+                .sort().forEach((city) => citySelect.add(new Option(city, city)));
+
+            if (token) {
+                try {
+                    const people = await app.api('/api/favorites', { token });
+                    favorites = new Set(people.map((person) => String(person.id)));
+                } catch (error) {
+                    if (error.status === 401) {
+                        sessionStorage.removeItem('authToken');
+                        sessionStorage.removeItem('authUser');
+                    } else {
+                        console.error('Nie udało się pobrać ulubionych fachowców:', error);
+                    }
+                }
+            }
+            status.textContent = 'Ustalanie lokalizacji miast...';
+            await loadCoordinates();
+            render();
+        } catch (error) {
+            status.textContent = error.message || 'Nie udało się pobrać fachowców.';
+        }
+    }
+
+    search.addEventListener('input', render);
+    citySelect.addEventListener('change', () => {
+        center = coordinatesByCity.get(citySelect.value) || null;
+        if (center) map?.setView([center.latitude, center.longitude], 10);
+        render();
+    });
+    radius.addEventListener('input', () => {
+        radiusValue.textContent = `${radius.value} km`;
+        render();
+    });
+    $('locate-me').addEventListener('click', locateUser);
+    radiusValue.textContent = `${radius.value} km`;
+    load();
+});

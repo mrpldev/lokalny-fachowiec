@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mapa fachowców | Lokalny Fachowiec</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <script src="common.js" defer></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
+    <script src="site.js" defer></script>
+    <script src="professionals.js" defer></script>
+</head>
+<body>
+    <nav>
+        <div class="upper-nav">
+            <a class="site-nav-link" href="index.html">Zlecenia</a>
+            <a class="site-nav-link" href="history.html">Poznani fachowcy</a>
+            <a class="site-nav-link" href="calendar.html">Mój kalendarz</a>
+            <a class="site-nav-link" href="favorites.html">Ulubieni</a>
+            <button type="button" id="logout-btn" hidden>Wyloguj</button>
+        </div>
+    </nav>
+
+    <header class="professionals-header">
+        <h1>Znajdź fachowca w swojej okolicy</h1>
+        <label for="professional-search">Szukaj:</label>
+        <input id="professional-search" type="search" placeholder="Imię, miasto lub opis">
+        <label for="professional-city">Miasto:</label>
+        <select id="professional-city">
+            <option value="">Cała Polska</option>
+        </select>
+        <label for="search-radius">Obszar:</label>
+        <span id="search-radius-value">50 km</span>
+        <input id="search-radius" type="range" min="5" max="200" value="50" step="5">
+        <button type="button" id="locate-me">Użyj mojej lokalizacji</button>
+    </header>
+
+    <p id="professionals-status" class="page-status" role="status">Ładowanie fachowców...</p>
+    <div class="professionals-layout">
+        <div id="professionals-map" aria-label="Mapa fachowców"></div>
+        <section>
+            <h2>Fachowcy</h2>
+            <div id="professionals-list"></div>
+        </section>
+    </div>
+    <p class="map-attribution">Lokalizacja przybliżona na podstawie miasta. Mapa: OpenStreetMap; geokodowanie: Open-Meteo.</p>
+</body>
+</html>

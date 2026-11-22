@@ -5,6 +5,8 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>Rejestracja i logowanie | Lokalny Fachowiec</title>
 	<link rel="stylesheet" href="style.css">
+	<script src="common.js" defer></script>
+	<script src="auth.js" defer></script>
 	<link rel="preconnect" href="https://fonts.googleapis.com">
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 	<link href="https://fonts.googleapis.com/css2?family=Black+Ops+One&family=PT+Sans+Narrow:wght@400;700&family=Science+Gothic:wght@100..900&family=Tektur:wght@400..900&display=swap" rel="stylesheet">
@@ -78,96 +80,5 @@
 		<p>Autorzy: Ivan Mulitsa &amp; Yevhenii Pustovoit</p>
 	</footer>
 
-	<script>
-		const loginTab = document.getElementById('login-tab');
-		const registerTab = document.getElementById('register-tab');
-		const loginForm = document.getElementById('login-form');
-		const registerForm = document.getElementById('register-form');
-		const authMessage = document.getElementById('auth-message');
-		const apiUrl = 'https://lokalny-fachowiec-api.onrender.com';
-
-		async function postApi(path, payload, failureMessage) {
-			const response = await fetch(`${apiUrl}${path}`, {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify(payload),
-			});
-			const contentType = response.headers.get('content-type') || '';
-
-			if (!contentType.includes('application/json')) {
-				if (response.status === 404) {
-					throw new Error('Ten adres API nie został jeszcze opublikowany na Render.');
-				}
-				throw new Error(`API zwróciło nieprawidłową odpowiedź (HTTP ${response.status}).`);
-			}
-
-			let result;
-			try {
-				result = await response.json();
-			} catch {
-				throw new Error('API zwróciło nieprawidłowe dane JSON.');
-			}
-
-			if (!response.ok) {
-				throw new Error(result.error || failureMessage);
-			}
-
-			return result;
-		}
-
-		function showForm(isLogin) {
-			loginForm.hidden = !isLogin;
-			registerForm.hidden = isLogin;
-			loginTab.classList.toggle('active', isLogin);
-			registerTab.classList.toggle('active', !isLogin);
-			loginTab.setAttribute('aria-pressed', String(isLogin));
-			registerTab.setAttribute('aria-pressed', String(!isLogin));
-			authMessage.textContent = '';
-		}
-
-		loginTab.addEventListener('click', () => showForm(true));
-		registerTab.addEventListener('click', () => showForm(false));
-
-		loginForm.addEventListener('submit', async (event) => {
-			event.preventDefault();
-			authMessage.textContent = 'Logowanie...';
-			const submitButton = loginForm.querySelector('button[type="submit"]');
-			submitButton.disabled = true;
-
-			const formData = new FormData(loginForm);
-			const payload = Object.fromEntries(formData.entries());
-
-			try {
-				const result = await postApi('/api/login', payload, 'Nie udało się zalogować.');
-				loginForm.reset();
-				authMessage.textContent = `Zalogowano pomyślnie. Witaj, ${result.user.firstName}!`;
-			} catch (error) {
-				authMessage.textContent = error.message || 'Nie można połączyć się z serwerem.';
-			} finally {
-				submitButton.disabled = false;
-			}
-		});
-
-		registerForm.addEventListener('submit', async (event) => {
-			event.preventDefault();
-			authMessage.textContent = 'Tworzenie konta...';
-			const submitButton = registerForm.querySelector('button[type="submit"]');
-			submitButton.disabled = true;
-
-			const formData = new FormData(registerForm);
-			const payload = Object.fromEntries(formData.entries());
-
-			try {
-				await postApi('/api/register', payload, 'Nie udało się utworzyć konta.');
-				registerForm.reset();
-				showForm(true);
-				authMessage.textContent = 'Konto zostało utworzone. Możesz się zalogować.';
-			} catch (error) {
-				authMessage.textContent = error.message || 'Nie można połączyć się z serwerem.';
-			} finally {
-				submitButton.disabled = false;
-			}
-		});
-	</script>
 </body>
 </html>

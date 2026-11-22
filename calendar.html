@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mój kalendarz | Lokalny Fachowiec</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="common.js" defer></script>
+    <script src="site.js" defer></script>
+    <script src="calendar.js" defer></script>
+</head>
+<body>
+    <nav>
+        <div class="upper-nav">
+            <a class="site-nav-link" href="index.html">Zlecenia</a>
+            <a class="site-nav-link" href="professionals.html">Mapa fachowców</a>
+            <a class="site-nav-link" href="history.html">Poznani fachowcy</a>
+            <a class="site-nav-link" href="favorites.html">Ulubieni</a>
+            <button type="button" id="logout-btn" hidden>Wyloguj</button>
+        </div>
+    </nav>
+    <main class="calendar-page">
+        <h1>Moja dostępność w tygodniu</h1>
+        <p class="page-description">Zaznacz dni i godziny, w których przyjmujesz zlecenia.</p>
+        <p id="calendar-status" class="page-status" role="status">Ładowanie...</p>
+        <form id="availability-form">
+            <div id="availability-days"></div>
+            <button type="submit">Zapisz dostępność</button>
+        </form>
+        <section class="calendar-preview">
+            <h2>Najbliższe dostępne terminy</h2>
+            <div id="availability-preview"></div>
+        </section>
+    </main>
+</body>
+</html>

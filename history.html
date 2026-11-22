@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Znani fachowcy | Lokalny Fachowiec</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="common.js" defer></script>
+    <script src="site.js" defer></script>
+    <script src="history.js" defer></script>
+</head>
+<body>
+    <nav>
+        <div class="upper-nav">
+            <a class="site-nav-link" href="index.html">Zlecenia</a>
+            <a class="site-nav-link" href="professionals.html">Mapa fachowców</a>
+            <a class="site-nav-link" href="calendar.html">Mój kalendarz</a>
+            <a class="site-nav-link" href="favorites.html">Ulubieni</a>
+            <button type="button" id="logout-btn" hidden>Wyloguj</button>
+        </div>
+    </nav>
+    <main>
+        <h1>Fachowcy, z którymi współpracowano</h1>
+        <p class="page-description">Lista fachowców z zaakceptowanymi odpowiedziami na Twoje zlecenia.</p>
+        <p id="history-status" class="page-status" role="status">Ładowanie...</p>
+        <div id="history-list"></div>
+    </main>
+</body>
+</html>
