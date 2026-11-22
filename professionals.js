@@ -2,8 +2,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const $ = (id) => document.getElementById(id);
     const search = $('professional-search');
     const citySelect = $('professional-city');
-    const radius = $('search-radius');
-    const radiusValue = $('search-radius-value');
     const status = $('professionals-status');
     const list = $('professionals-list');
     const token = app.token();
@@ -12,7 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let reviewedProfessionalIds = new Set();
     let currentUserId = null;
     const coordinatesByCity = new Map();
-    let center = null;
+    let mapCenter = null;
     let map;
     let layers;
 
@@ -30,16 +28,6 @@ document.addEventListener('DOMContentLoaded', () => {
     function normalize(value) {
         return String(value || '').normalize('NFD')
             .replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('pl-PL');
-    }
-
-    function distanceKm(first, second) {
-        const radians = (degrees) => degrees * Math.PI / 180;
-        const lat = radians(second.latitude - first.latitude);
-        const lon = radians(second.longitude - first.longitude);
-        const a = Math.sin(lat / 2) ** 2
-            + Math.cos(radians(first.latitude)) * Math.cos(radians(second.latitude))
-            * Math.sin(lon / 2) ** 2;
-        return 6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     }
 
     async function geocode(city) {
@@ -81,16 +69,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function visibleProfessionals() {
         const keyword = normalize(search.value.trim());
-        const maxDistance = Number(radius.value);
+        const selectedCity = citySelect.value;
         return professionals.filter((person) => {
             const searchable = normalize([
                 person.firstName, person.lastName, person.role, person.city, person.description,
             ].join(' '));
             if (keyword && !searchable.includes(keyword)) return false;
-            if (center) {
-                const point = coordinatesByCity.get(person.city);
-                if (!point || distanceKm(center, point) > maxDistance) return false;
-            }
+            if (selectedCity && person.city !== selectedCity) return false;
             return true;
         });
     }
@@ -220,6 +205,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function createCard(person) {
         const card = app.profileCard(person);
+        card.querySelector('.professional-avatar')?.remove();
         const details = card.querySelector('.professional-details');
         const ratingSummary = details.querySelector('.professional-rating');
         const actions = app.element('div', '', 'professional-actions');
@@ -278,12 +264,8 @@ document.addEventListener('DOMContentLoaded', () => {
             marker.bindPopup(popup).addTo(layers);
         });
 
-        if (center) {
-            L.circle([center.latitude, center.longitude], {
-                radius: Number(radius.value) * 1000,
-                color: '#849500',
-                fillOpacity: 0.08,
-            }).addTo(layers);
+        if (mapCenter) {
+            map.setView([mapCenter.latitude, mapCenter.longitude], 10);
         } else if (points.length) {
             map.fitBounds(points, { padding: [24, 24], maxZoom: 10 });
         }
@@ -307,9 +289,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         navigator.geolocation.getCurrentPosition(
             ({ coords }) => {
-                center = { latitude: coords.latitude, longitude: coords.longitude };
+                mapCenter = { latitude: coords.latitude, longitude: coords.longitude };
                 citySelect.value = '';
-                map?.setView([center.latitude, center.longitude], 10);
                 render();
             },
             () => {
@@ -363,15 +344,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     search.addEventListener('input', render);
     citySelect.addEventListener('change', () => {
-        center = coordinatesByCity.get(citySelect.value) || null;
-        if (center) map?.setView([center.latitude, center.longitude], 10);
-        render();
-    });
-    radius.addEventListener('input', () => {
-        radiusValue.textContent = `${radius.value} km`;
+        mapCenter = coordinatesByCity.get(citySelect.value) || null;
         render();
     });
     $('locate-me').addEventListener('click', locateUser);
-    radiusValue.textContent = `${radius.value} km`;
     load();
 });

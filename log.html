@@ -3,7 +3,7 @@
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>Rejestracja i logowanie | Lokalny Fachowiec</title>
+	<title>Rejestracja i logowanie</title>
 	<link rel="stylesheet" href="style.css">
 	<script src="common.js" defer></script>
 	<script src="auth.js" defer></script>
@@ -23,11 +23,13 @@
 	<main class="auth-main">
 		<h2>Rejestracja i logowanie</h2>
 		<div class="auth-switch" aria-label="Wybierz formularz">
+
 			<button type="button" id="login-tab" class="active" aria-pressed="true">Logowanie</button>
 			<button type="button" id="register-tab" aria-pressed="false">Rejestracja</button>
 		</div>
 
 		<form id="login-form" class="auth-form">
+
 			<label for="login-email">Adres e-mail:</label>
 			<input id="login-email" name="email" type="email" autocomplete="email" required>
 
@@ -38,6 +40,7 @@
 		</form>
 
 		<form id="register-form" class="auth-form" hidden>
+
 			<label for="register-first-name">Imię:</label>
 			<input id="register-first-name" name="firstName" type="text" autocomplete="given-name" maxlength="100" required>
 
@@ -58,7 +61,7 @@
 				<option value="firma">Firma</option>
 			</select>
 
-			<label for="register-experience">Staż zawodowy (lata):</label>
+			<label for="register-experience">Staż zawodowy:</label>
 			<input id="register-experience" name="experienceYears" type="number" min="0" max="80" step="1" required>
 
 			<label for="register-city">Miasto:</label>
@@ -67,7 +70,7 @@
 			<label for="register-description">Opis:</label>
 			<textarea id="register-description" name="description" rows="4" maxlength="65535"></textarea>
 
-			<label for="register-password">Hasło (od 8 do 128 znaków):</label>
+			<label for="register-password">Hasło (od 8 znaków):</label>
 			<input id="register-password" name="password" type="password" autocomplete="new-password" minlength="8" maxlength="128" required>
 
 			<button type="submit">Utwórz konto</button>

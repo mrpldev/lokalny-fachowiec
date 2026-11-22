@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mapa fachowców | Lokalny Fachowiec</title>
+    <title>Mapa fachowców</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
     <script src="common.js" defer></script>
@@ -16,7 +16,7 @@
         <div class="upper-nav">
             <a class="site-nav-link" href="index.html">Zlecenia</a>
             <a class="site-nav-link" href="history.html">Poznani fachowcy</a>
-            <a class="site-nav-link" href="calendar.html">Mój kalendarz</a>
+            <a class="site-nav-link" href="calendar.html">Kalendarz</a>
             <a class="site-nav-link" href="favorites.html">Ulubieni</a>
             <button type="button" id="logout-btn" hidden>Wyloguj</button>
         </div>
@@ -30,9 +30,6 @@
         <select id="professional-city">
             <option value="">Cała Polska</option>
         </select>
-        <label for="search-radius">Obszar:</label>
-        <span id="search-radius-value">50 km</span>
-        <input id="search-radius" type="range" min="5" max="200" value="50" step="5">
         <button type="button" id="locate-me">Użyj mojej lokalizacji</button>
     </header>
 
